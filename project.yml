@@ -1,0 +1,94 @@
+name: ProxPulse
+options:
+  minimumXcodeGenVersion: 2.42.0
+  deploymentTarget:
+    macOS: '14.0'
+settings:
+  base:
+    MARKETING_VERSION: 0.1.0
+    CURRENT_PROJECT_VERSION: 7
+    SWIFT_VERSION: '6.0'
+    MACOSX_DEPLOYMENT_TARGET: '14.0'
+    CODE_SIGN_STYLE: Automatic
+    ENABLE_HARDENED_RUNTIME: YES
+    SWIFT_STRICT_CONCURRENCY: complete
+    GENERATE_INFOPLIST_FILE: YES
+targets:
+  ProxPulseCore:
+    type: library.static
+    platform: macOS
+    sources: [Sources/ProxPulseCore]
+    settings:
+      PRODUCT_BUNDLE_IDENTIFIER: dev.proxpulse.core
+  ProxPulseWidgetUI:
+    type: library.static
+    platform: macOS
+    sources: [Sources/ProxPulseWidgetUI]
+    settings:
+      APPLICATION_EXTENSION_API_ONLY: YES
+    dependencies:
+      - target: ProxPulseCore
+  ProxPulse:
+    type: application
+    platform: macOS
+    sources:
+      - path: Sources/ProxPulse
+      - path: Resources/AppIcon.icns
+        buildPhase: resources
+    info:
+      path: AppInfo.plist
+      properties:
+        CFBundleIconFile: AppIcon.icns
+        CFBundleShortVersionString: 0.1.0
+        CFBundleVersion: "7"
+        CFBundleURLTypes:
+          - CFBundleURLName: dev.proxpulse.dashboard
+            CFBundleURLSchemes: [proxpulse]
+    dependencies:
+      - target: ProxPulseCore
+      - target: ProxPulseWidgetUI
+      - target: ProxPulseWidget
+        embed: true
+    settings:
+      PRODUCT_BUNDLE_IDENTIFIER: dev.proxpulse.app
+      SWIFT_ACTIVE_COMPILATION_CONDITIONS: '$(inherited) PROXPULSE_XCODE'
+      CODE_SIGN_ENTITLEMENTS: ProxPulse.entitlements
+      INFOPLIST_KEY_LSApplicationCategoryType: public.app-category.utilities
+      INFOPLIST_KEY_CFBundleDisplayName: ProxPulse
+  ProxPulseWidget:
+    type: app-extension
+    platform: macOS
+    sources:
+      - path: WidgetExtension
+      - path: Resources/AppIcon.icns
+        buildPhase: resources
+    dependencies:
+      - target: ProxPulseCore
+      - target: ProxPulseWidgetUI
+    info:
+      path: WidgetExtension/Info.plist
+      properties:
+        CFBundleDisplayName: ProxPulse
+        CFBundleIconFile: AppIcon.icns
+        CFBundleShortVersionString: 0.1.0
+        CFBundleVersion: "7"
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.widgetkit-extension
+    settings:
+      PRODUCT_BUNDLE_IDENTIFIER: dev.proxpulse.app.widget
+      APPLICATION_EXTENSION_API_ONLY: YES
+      SKIP_INSTALL: YES
+      CODE_SIGN_ENTITLEMENTS: ProxPulse.entitlements
+  ProxPulseCoreTests:
+    type: bundle.unit-test
+    platform: macOS
+    sources: [Tests/ProxPulseCoreTests]
+    dependencies:
+      - target: ProxPulseCore
+schemes:
+  ProxPulse:
+    build:
+      targets:
+        ProxPulse: all
+    test:
+      targets: [ProxPulseCoreTests]

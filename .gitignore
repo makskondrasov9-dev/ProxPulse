@@ -1,0 +1,51 @@
+# Build products and local verification artifacts
+.build/
+.swiftpm/
+DerivedData/
+build/
+dist/
+*.app/
+*.dmg
+*.dmg.sha256
+*.dSYM/
+*.xcarchive/
+*.log
+
+# Xcode user state
+xcuserdata/
+*.xcuserstate
+*.xcscmblueprint
+*.xccheckout
+
+# Machine-specific configuration, credentials and signing keys
+.env
+.env.*
+!.env.example
+*.local.json
+profiles.json
+snapshot.json
+credentials*
+secrets*
+*.p12
+*.pfx
+*.key
+*.pem
+*.keystore
+*.keychain*
+*.local.xcconfig
+*.mobileprovision
+*.provisionprofile
+.aws/
+.codex/
+.agents/
+
+# Private development reports and live screenshots
+Preview/
+SPRINT*.md
+
+# macOS and editor state
+.DS_Store
+.AppleDouble
+.LSOverride
+*.swp
+*~

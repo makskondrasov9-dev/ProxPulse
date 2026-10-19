@@ -1,0 +1,999 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		023842E7CCE18D72FD05105D /* Localization.swift in Sources */ = {isa = PBXBuildFile; fileRef = 430AE7CC0C93D0248479E74B /* Localization.swift */; };
+		0394F4D645DC5C110335D18E /* TerminalLauncher.swift in Sources */ = {isa = PBXBuildFile; fileRef = 953F5E298D6908087C7C6023 /* TerminalLauncher.swift */; };
+		0D18044786F81616BAA1ED06 /* GuestCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = AF7B8E78F7509AA4131CA80D /* GuestCard.swift */; };
+		175C2A1419D82BE054F9DE82 /* ResourcePoller.swift in Sources */ = {isa = PBXBuildFile; fileRef = 095A9EF03989404A8F1D8A46 /* ResourcePoller.swift */; };
+		1A1FDCBE553E3A7B1FEB085D /* DashboardModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 625AD8BC8A88F00361FD3E47 /* DashboardModel.swift */; };
+		1DC25AC5981E154FB1AD0B8B /* MockDataProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 87A87E928F41FF36CC1B4590 /* MockDataProvider.swift */; };
+		24D0C77A47852B093201BDCE /* SunburstDiskView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BA2394491466F0B05358A62 /* SunburstDiskView.swift */; };
+		325F0CCAE76C01D3AAD5E91E /* GuestInspectorSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE7BB15896BEED6F880223B2 /* GuestInspectorSheet.swift */; };
+		3FA6DBFED2CCAC1EBEABEC77 /* GuestTelemetry.swift in Sources */ = {isa = PBXBuildFile; fileRef = A4C4BC8552920E2AB38B4816 /* GuestTelemetry.swift */; };
+		5018A5DEAF2D2C3C2EB9798A /* RuntimeUIVerification.swift in Sources */ = {isa = PBXBuildFile; fileRef = 12FFE3B656365565346739DF /* RuntimeUIVerification.swift */; };
+		539C1777774B0ECF2B6CF0C3 /* IncidentReport.swift in Sources */ = {isa = PBXBuildFile; fileRef = B906055943FB381D56723D8E /* IncidentReport.swift */; };
+		5AE900E777C0167C780A694E /* libProxPulseCore.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 71D4AE33248909363DAD263C /* libProxPulseCore.a */; };
+		5BC44E9D689C7D88FC9C4D59 /* DiagnosticEngineTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9C67A78FA533FFC9AA05EA59 /* DiagnosticEngineTests.swift */; };
+		5F84341EA1C624F523152C3A /* ActivityRingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E101A9635544156D2DDFD7D /* ActivityRingView.swift */; };
+		622C93126F852DEE54DC501F /* Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27696EF75FB447F3AD76BBDB /* Models.swift */; };
+		6E75CEF407310496C4D29163 /* ProfileStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 52AA4B12AF772A75B05D5502 /* ProfileStore.swift */; };
+		71B4143A164DB3BF7D6E2EBA /* AppIcon.icns in Resources */ = {isa = PBXBuildFile; fileRef = F0D53188D85CC277DDAC7315 /* AppIcon.icns */; };
+		7B243889EF849E946A24494E /* GuestResourcesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F23ECE5180D18B7184EA1000 /* GuestResourcesView.swift */; };
+		7D955597A426D7B36954F294 /* DesignSystem.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF30D606693543ADE991A69C /* DesignSystem.swift */; };
+		7DCE2DC705E95FEEA70B82F7 /* libProxPulseCore.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 71D4AE33248909363DAD263C /* libProxPulseCore.a */; };
+		7EDF0600124E8D6013B26653 /* MenuBarPopover.swift in Sources */ = {isa = PBXBuildFile; fileRef = 52805E0B8D1D9657C450F937 /* MenuBarPopover.swift */; };
+		80EEA93E65A6E0DA64B1844A /* Preferences.swift in Sources */ = {isa = PBXBuildFile; fileRef = 06E54A719F704692C40C2387 /* Preferences.swift */; };
+		8B5DAFDD0960F5B07BEB9DEF /* AppIcon.icns in Resources */ = {isa = PBXBuildFile; fileRef = F0D53188D85CC277DDAC7315 /* AppIcon.icns */; };
+		96D8A08D740BA479CD0A6F9B /* PulseWidgetViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = B9043F35E2599B726B18333B /* PulseWidgetViews.swift */; };
+		9827BBC70251C94A6D431FA6 /* libProxPulseWidgetUI.a in Frameworks */ = {isa = PBXBuildFile; fileRef = AB92F67792BD6604BB330CBE /* libProxPulseWidgetUI.a */; };
+		9840AD6C3976F2921095ACC4 /* ProxPulseWidget.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = A19D3947D6BBD4699253BB01 /* ProxPulseWidget.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		BBF3F3FFEB53E4FA0174915C /* libProxPulseWidgetUI.a in Frameworks */ = {isa = PBXBuildFile; fileRef = AB92F67792BD6604BB330CBE /* libProxPulseWidgetUI.a */; };
+		BFD81A1F8B98F655FD3E0B24 /* ProxPulseWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7DB9F86D949BC0DE9EB81172 /* ProxPulseWidget.swift */; };
+		C18FC4797660D7B633E7FF47 /* IncidentSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 463E3FF19A219F02B3BB8A53 /* IncidentSheet.swift */; };
+		C732A097B17004A0708CB257 /* NotificationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 85A4850801FF8139A39EE95E /* NotificationService.swift */; };
+		D5344A54A3F15AA02E12189F /* GuestActionSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6C13B2DC89E1A2C2F921EC2B /* GuestActionSheet.swift */; };
+		D850F32F49E60B4CB092FFCF /* DiagnosticEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0914B07713B56FFE9201E2A8 /* DiagnosticEngine.swift */; };
+		D944C5100639A1B94A06A00B /* ProxPulseApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 194E14F069DAE1E6CD755ADF /* ProxPulseApp.swift */; };
+		E441D8E57B60AA9682D1CFA6 /* AddServerSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 23F566E59A40BB546D062FC4 /* AddServerSheet.swift */; };
+		E60D7F01A419C0CA4E0B8E17 /* ProxmoxAPIService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 08D80C710B7EB9068AF7CC04 /* ProxmoxAPIService.swift */; };
+		E877530AF107E0D730DC1DB9 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9B835A1CD718242F383806B8 /* SettingsView.swift */; };
+		ECD5A54D86619FD06BAB5739 /* LocalizationViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A138C02215B4A29924B3328 /* LocalizationViews.swift */; };
+		ED086465F8895C0D8C78DF87 /* libProxPulseCore.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 71D4AE33248909363DAD263C /* libProxPulseCore.a */; };
+		F179CE243FC7B4860F789238 /* DashboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBFEF367E983DD8670B31DBB /* DashboardView.swift */; };
+		F7B1123BC5C3EDD7A2F30D80 /* LiveDataAdapter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 773486D41C63867ACDCE88DA /* LiveDataAdapter.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		11E956793CC47C9B227E71FF /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = B9BC1920BC2ED1CA543C07D6 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 85BD3290C537FE6E51EDA44A;
+			remoteInfo = ProxPulseCore;
+		};
+		1280D729995937D80F8B650C /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = B9BC1920BC2ED1CA543C07D6 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 85BD3290C537FE6E51EDA44A;
+			remoteInfo = ProxPulseCore;
+		};
+		4447574130AA5DF0E0577B80 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = B9BC1920BC2ED1CA543C07D6 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 85BD3290C537FE6E51EDA44A;
+			remoteInfo = ProxPulseCore;
+		};
+		45B6324A4A12EA9D5F533CF8 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = B9BC1920BC2ED1CA543C07D6 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 22AB4E9CE03FEEBFB495F480;
+			remoteInfo = ProxPulseWidgetUI;
+		};
+		4A9926DB6AF17D3B54E73A30 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = B9BC1920BC2ED1CA543C07D6 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 424D516B21C31B514FB82847;
+			remoteInfo = ProxPulseWidget;
+		};
+		5055DBD4CF642B32F74BE7CC /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = B9BC1920BC2ED1CA543C07D6 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 85BD3290C537FE6E51EDA44A;
+			remoteInfo = ProxPulseCore;
+		};
+		DD3CD8039A9DE52D9D20891F /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = B9BC1920BC2ED1CA543C07D6 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 22AB4E9CE03FEEBFB495F480;
+			remoteInfo = ProxPulseWidgetUI;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		8C7CD48067FC26C9C112D03A /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				9840AD6C3976F2921095ACC4 /* ProxPulseWidget.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
+/* Begin PBXFileReference section */
+		06E54A719F704692C40C2387 /* Preferences.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Preferences.swift; sourceTree = "<group>"; };
+		08D80C710B7EB9068AF7CC04 /* ProxmoxAPIService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProxmoxAPIService.swift; sourceTree = "<group>"; };
+		0914B07713B56FFE9201E2A8 /* DiagnosticEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiagnosticEngine.swift; sourceTree = "<group>"; };
+		095A9EF03989404A8F1D8A46 /* ResourcePoller.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResourcePoller.swift; sourceTree = "<group>"; };
+		12FFE3B656365565346739DF /* RuntimeUIVerification.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RuntimeUIVerification.swift; sourceTree = "<group>"; };
+		194E14F069DAE1E6CD755ADF /* ProxPulseApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProxPulseApp.swift; sourceTree = "<group>"; };
+		23F566E59A40BB546D062FC4 /* AddServerSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddServerSheet.swift; sourceTree = "<group>"; };
+		27696EF75FB447F3AD76BBDB /* Models.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models.swift; sourceTree = "<group>"; };
+		391435C0B62CE2D7C1CAC613 /* ProxPulse.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ProxPulse.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		430AE7CC0C93D0248479E74B /* Localization.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Localization.swift; sourceTree = "<group>"; };
+		463E3FF19A219F02B3BB8A53 /* IncidentSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IncidentSheet.swift; sourceTree = "<group>"; };
+		52805E0B8D1D9657C450F937 /* MenuBarPopover.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuBarPopover.swift; sourceTree = "<group>"; };
+		52AA4B12AF772A75B05D5502 /* ProfileStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileStore.swift; sourceTree = "<group>"; };
+		625AD8BC8A88F00361FD3E47 /* DashboardModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardModel.swift; sourceTree = "<group>"; };
+		6C13B2DC89E1A2C2F921EC2B /* GuestActionSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GuestActionSheet.swift; sourceTree = "<group>"; };
+		71D4AE33248909363DAD263C /* libProxPulseCore.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libProxPulseCore.a; sourceTree = BUILT_PRODUCTS_DIR; };
+		773486D41C63867ACDCE88DA /* LiveDataAdapter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveDataAdapter.swift; sourceTree = "<group>"; };
+		7BA2394491466F0B05358A62 /* SunburstDiskView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SunburstDiskView.swift; sourceTree = "<group>"; };
+		7DB9F86D949BC0DE9EB81172 /* ProxPulseWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProxPulseWidget.swift; sourceTree = "<group>"; };
+		85A4850801FF8139A39EE95E /* NotificationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationService.swift; sourceTree = "<group>"; };
+		87A87E928F41FF36CC1B4590 /* MockDataProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockDataProvider.swift; sourceTree = "<group>"; };
+		8A138C02215B4A29924B3328 /* LocalizationViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalizationViews.swift; sourceTree = "<group>"; };
+		8E101A9635544156D2DDFD7D /* ActivityRingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActivityRingView.swift; sourceTree = "<group>"; };
+		918B231FD93025946F894712 /* ProxPulseCoreTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ProxPulseCoreTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		953F5E298D6908087C7C6023 /* TerminalLauncher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TerminalLauncher.swift; sourceTree = "<group>"; };
+		9B835A1CD718242F383806B8 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		9C67A78FA533FFC9AA05EA59 /* DiagnosticEngineTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiagnosticEngineTests.swift; sourceTree = "<group>"; };
+		A19D3947D6BBD4699253BB01 /* ProxPulseWidget.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = ProxPulseWidget.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		A4C4BC8552920E2AB38B4816 /* GuestTelemetry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GuestTelemetry.swift; sourceTree = "<group>"; };
+		AB92F67792BD6604BB330CBE /* libProxPulseWidgetUI.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libProxPulseWidgetUI.a; sourceTree = BUILT_PRODUCTS_DIR; };
+		AF7B8E78F7509AA4131CA80D /* GuestCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GuestCard.swift; sourceTree = "<group>"; };
+		B9043F35E2599B726B18333B /* PulseWidgetViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PulseWidgetViews.swift; sourceTree = "<group>"; };
+		B906055943FB381D56723D8E /* IncidentReport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IncidentReport.swift; sourceTree = "<group>"; };
+		BE7BB15896BEED6F880223B2 /* GuestInspectorSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GuestInspectorSheet.swift; sourceTree = "<group>"; };
+		C63B8281729AFE7F601148EB /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		EF30D606693543ADE991A69C /* DesignSystem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DesignSystem.swift; sourceTree = "<group>"; };
+		F0D53188D85CC277DDAC7315 /* AppIcon.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; path = AppIcon.icns; sourceTree = "<group>"; };
+		F23ECE5180D18B7184EA1000 /* GuestResourcesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GuestResourcesView.swift; sourceTree = "<group>"; };
+		FBFEF367E983DD8670B31DBB /* DashboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardView.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		7D0D363A27630C72AB5A11FE /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				7DCE2DC705E95FEEA70B82F7 /* libProxPulseCore.a in Frameworks */,
+				9827BBC70251C94A6D431FA6 /* libProxPulseWidgetUI.a in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		B5E7BB62B9BFEBB41BBB780E /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				5AE900E777C0167C780A694E /* libProxPulseCore.a in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		E504D78C4DA02E4D81ACECF7 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				ED086465F8895C0D8C78DF87 /* libProxPulseCore.a in Frameworks */,
+				BBF3F3FFEB53E4FA0174915C /* libProxPulseWidgetUI.a in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		0498DF3B4D8FC19297C53EFE = {
+			isa = PBXGroup;
+			children = (
+				2A8E2374DC1EFB582D918323 /* ProxPulse */,
+				5F8778B6E783AF2C265499E4 /* ProxPulseCore */,
+				CE42BA44C59C663EB6F646C4 /* ProxPulseCoreTests */,
+				55DD5AD5EDEA999F0DB18AA9 /* ProxPulseWidgetUI */,
+				5F75CE19DBD1F01F23EA6CAF /* Resources */,
+				2B78128C5DF6B5CD455DF65B /* WidgetExtension */,
+				B925610894383C824CD65F06 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		1179C1CE88F090041FC2A943 /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				23F566E59A40BB546D062FC4 /* AddServerSheet.swift */,
+				FBFEF367E983DD8670B31DBB /* DashboardView.swift */,
+				6C13B2DC89E1A2C2F921EC2B /* GuestActionSheet.swift */,
+				AF7B8E78F7509AA4131CA80D /* GuestCard.swift */,
+				BE7BB15896BEED6F880223B2 /* GuestInspectorSheet.swift */,
+				F23ECE5180D18B7184EA1000 /* GuestResourcesView.swift */,
+				463E3FF19A219F02B3BB8A53 /* IncidentSheet.swift */,
+				52805E0B8D1D9657C450F937 /* MenuBarPopover.swift */,
+				9B835A1CD718242F383806B8 /* SettingsView.swift */,
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
+		2A8E2374DC1EFB582D918323 /* ProxPulse */ = {
+			isa = PBXGroup;
+			children = (
+				625AD8BC8A88F00361FD3E47 /* DashboardModel.swift */,
+				85A4850801FF8139A39EE95E /* NotificationService.swift */,
+				194E14F069DAE1E6CD755ADF /* ProxPulseApp.swift */,
+				12FFE3B656365565346739DF /* RuntimeUIVerification.swift */,
+				953F5E298D6908087C7C6023 /* TerminalLauncher.swift */,
+				CDD87890E4BB46FA7BF1EA25 /* Components */,
+				1179C1CE88F090041FC2A943 /* Views */,
+			);
+			name = ProxPulse;
+			path = Sources/ProxPulse;
+			sourceTree = "<group>";
+		};
+		2B78128C5DF6B5CD455DF65B /* WidgetExtension */ = {
+			isa = PBXGroup;
+			children = (
+				C63B8281729AFE7F601148EB /* Info.plist */,
+				7DB9F86D949BC0DE9EB81172 /* ProxPulseWidget.swift */,
+			);
+			path = WidgetExtension;
+			sourceTree = "<group>";
+		};
+		55DD5AD5EDEA999F0DB18AA9 /* ProxPulseWidgetUI */ = {
+			isa = PBXGroup;
+			children = (
+				B9043F35E2599B726B18333B /* PulseWidgetViews.swift */,
+			);
+			name = ProxPulseWidgetUI;
+			path = Sources/ProxPulseWidgetUI;
+			sourceTree = "<group>";
+		};
+		5F75CE19DBD1F01F23EA6CAF /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				F0D53188D85CC277DDAC7315 /* AppIcon.icns */,
+			);
+			path = Resources;
+			sourceTree = "<group>";
+		};
+		5F8778B6E783AF2C265499E4 /* ProxPulseCore */ = {
+			isa = PBXGroup;
+			children = (
+				0914B07713B56FFE9201E2A8 /* DiagnosticEngine.swift */,
+				A4C4BC8552920E2AB38B4816 /* GuestTelemetry.swift */,
+				B906055943FB381D56723D8E /* IncidentReport.swift */,
+				773486D41C63867ACDCE88DA /* LiveDataAdapter.swift */,
+				430AE7CC0C93D0248479E74B /* Localization.swift */,
+				87A87E928F41FF36CC1B4590 /* MockDataProvider.swift */,
+				27696EF75FB447F3AD76BBDB /* Models.swift */,
+				06E54A719F704692C40C2387 /* Preferences.swift */,
+				52AA4B12AF772A75B05D5502 /* ProfileStore.swift */,
+				08D80C710B7EB9068AF7CC04 /* ProxmoxAPIService.swift */,
+				095A9EF03989404A8F1D8A46 /* ResourcePoller.swift */,
+			);
+			name = ProxPulseCore;
+			path = Sources/ProxPulseCore;
+			sourceTree = "<group>";
+		};
+		B925610894383C824CD65F06 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				71D4AE33248909363DAD263C /* libProxPulseCore.a */,
+				AB92F67792BD6604BB330CBE /* libProxPulseWidgetUI.a */,
+				391435C0B62CE2D7C1CAC613 /* ProxPulse.app */,
+				918B231FD93025946F894712 /* ProxPulseCoreTests.xctest */,
+				A19D3947D6BBD4699253BB01 /* ProxPulseWidget.appex */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		CDD87890E4BB46FA7BF1EA25 /* Components */ = {
+			isa = PBXGroup;
+			children = (
+				8E101A9635544156D2DDFD7D /* ActivityRingView.swift */,
+				EF30D606693543ADE991A69C /* DesignSystem.swift */,
+				8A138C02215B4A29924B3328 /* LocalizationViews.swift */,
+				7BA2394491466F0B05358A62 /* SunburstDiskView.swift */,
+			);
+			path = Components;
+			sourceTree = "<group>";
+		};
+		CE42BA44C59C663EB6F646C4 /* ProxPulseCoreTests */ = {
+			isa = PBXGroup;
+			children = (
+				9C67A78FA533FFC9AA05EA59 /* DiagnosticEngineTests.swift */,
+			);
+			name = ProxPulseCoreTests;
+			path = Tests/ProxPulseCoreTests;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		220AE0BE64B17747EBE4A258 /* ProxPulseCoreTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 30A5792398FB1C30FC442D3B /* Build configuration list for PBXNativeTarget "ProxPulseCoreTests" */;
+			buildPhases = (
+				CE3EAE2ADF21694D9528AE10 /* Sources */,
+				B5E7BB62B9BFEBB41BBB780E /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				3AB7387FA940C568EF33E446 /* PBXTargetDependency */,
+			);
+			name = ProxPulseCoreTests;
+			packageProductDependencies = (
+			);
+			productName = ProxPulseCoreTests;
+			productReference = 918B231FD93025946F894712 /* ProxPulseCoreTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+		22AB4E9CE03FEEBFB495F480 /* ProxPulseWidgetUI */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 471BFD0BEDF2161CFDFF738F /* Build configuration list for PBXNativeTarget "ProxPulseWidgetUI" */;
+			buildPhases = (
+				CE07A9B830FAF75FB7ADFA9C /* Sources */,
+				9ABD4DCCBE912778B1C7166C /* Copy Swift Objective-C Interface Header */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				BD47D947412EBF138961DB1B /* PBXTargetDependency */,
+			);
+			name = ProxPulseWidgetUI;
+			packageProductDependencies = (
+			);
+			productName = ProxPulseWidgetUI;
+			productReference = AB92F67792BD6604BB330CBE /* libProxPulseWidgetUI.a */;
+			productType = "com.apple.product-type.library.static";
+		};
+		424D516B21C31B514FB82847 /* ProxPulseWidget */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 22CD7DE1BBB8C70EC35BA200 /* Build configuration list for PBXNativeTarget "ProxPulseWidget" */;
+			buildPhases = (
+				B94DD964C4AA83507F6DDE8C /* Sources */,
+				FA5614087BF61450C86ACA2C /* Resources */,
+				7D0D363A27630C72AB5A11FE /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				1B8FC3AD402829D80E4C0DEF /* PBXTargetDependency */,
+				B46DB07E49EBA562C4D68A66 /* PBXTargetDependency */,
+			);
+			name = ProxPulseWidget;
+			packageProductDependencies = (
+			);
+			productName = ProxPulseWidget;
+			productReference = A19D3947D6BBD4699253BB01 /* ProxPulseWidget.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
+		85BD3290C537FE6E51EDA44A /* ProxPulseCore */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = B6B5780A54361F9CAAA9D429 /* Build configuration list for PBXNativeTarget "ProxPulseCore" */;
+			buildPhases = (
+				20C8B2082CC5FBFD12B4A9AA /* Sources */,
+				03FB6AB42E144625AC36D6B0 /* Copy Swift Objective-C Interface Header */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = ProxPulseCore;
+			packageProductDependencies = (
+			);
+			productName = ProxPulseCore;
+			productReference = 71D4AE33248909363DAD263C /* libProxPulseCore.a */;
+			productType = "com.apple.product-type.library.static";
+		};
+		C22E86DEF5ECB3ADA0A03392 /* ProxPulse */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 2588BBE4802EEC490C7F771C /* Build configuration list for PBXNativeTarget "ProxPulse" */;
+			buildPhases = (
+				8F456C6860D0BFE5F49843E3 /* Sources */,
+				3C20EBB52A4500AC99F26A66 /* Resources */,
+				E504D78C4DA02E4D81ACECF7 /* Frameworks */,
+				8C7CD48067FC26C9C112D03A /* Embed Foundation Extensions */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				D431A358D937929961715052 /* PBXTargetDependency */,
+				178BF5B46F3804C65A1858BF /* PBXTargetDependency */,
+				ADA45A4DE8165352B3A8778E /* PBXTargetDependency */,
+			);
+			name = ProxPulse;
+			packageProductDependencies = (
+			);
+			productName = ProxPulse;
+			productReference = 391435C0B62CE2D7C1CAC613 /* ProxPulse.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		B9BC1920BC2ED1CA543C07D6 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1430;
+				TargetAttributes = {
+					220AE0BE64B17747EBE4A258 = {
+						ProvisioningStyle = Automatic;
+					};
+					22AB4E9CE03FEEBFB495F480 = {
+						ProvisioningStyle = Automatic;
+					};
+					424D516B21C31B514FB82847 = {
+						ProvisioningStyle = Automatic;
+					};
+					85BD3290C537FE6E51EDA44A = {
+						ProvisioningStyle = Automatic;
+					};
+					C22E86DEF5ECB3ADA0A03392 = {
+						ProvisioningStyle = Automatic;
+					};
+				};
+			};
+			buildConfigurationList = 2F98E8B33D30A561537A9C53 /* Build configuration list for PBXProject "ProxPulse" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				en,
+			);
+			mainGroup = 0498DF3B4D8FC19297C53EFE;
+			minimizedProjectReferenceProxies = 1;
+			preferredProjectObjectVersion = 77;
+			productRefGroup = B925610894383C824CD65F06 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				85BD3290C537FE6E51EDA44A /* ProxPulseCore */,
+				22AB4E9CE03FEEBFB495F480 /* ProxPulseWidgetUI */,
+				C22E86DEF5ECB3ADA0A03392 /* ProxPulse */,
+				424D516B21C31B514FB82847 /* ProxPulseWidget */,
+				220AE0BE64B17747EBE4A258 /* ProxPulseCoreTests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		3C20EBB52A4500AC99F26A66 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				8B5DAFDD0960F5B07BEB9DEF /* AppIcon.icns in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		FA5614087BF61450C86ACA2C /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				71B4143A164DB3BF7D6E2EBA /* AppIcon.icns in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		03FB6AB42E144625AC36D6B0 /* Copy Swift Objective-C Interface Header */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+				"$(DERIVED_SOURCES_DIR)/$(SWIFT_OBJC_INTERFACE_HEADER_NAME)",
+			);
+			name = "Copy Swift Objective-C Interface Header";
+			outputPaths = (
+				"$(BUILT_PRODUCTS_DIR)/include/$(PRODUCT_MODULE_NAME)/$(SWIFT_OBJC_INTERFACE_HEADER_NAME)",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "ditto \"${SCRIPT_INPUT_FILE_0}\" \"${SCRIPT_OUTPUT_FILE_0}\"\n";
+		};
+		9ABD4DCCBE912778B1C7166C /* Copy Swift Objective-C Interface Header */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+				"$(DERIVED_SOURCES_DIR)/$(SWIFT_OBJC_INTERFACE_HEADER_NAME)",
+			);
+			name = "Copy Swift Objective-C Interface Header";
+			outputPaths = (
+				"$(BUILT_PRODUCTS_DIR)/include/$(PRODUCT_MODULE_NAME)/$(SWIFT_OBJC_INTERFACE_HEADER_NAME)",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "ditto \"${SCRIPT_INPUT_FILE_0}\" \"${SCRIPT_OUTPUT_FILE_0}\"\n";
+		};
+/* End PBXShellScriptBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		20C8B2082CC5FBFD12B4A9AA /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				D850F32F49E60B4CB092FFCF /* DiagnosticEngine.swift in Sources */,
+				3FA6DBFED2CCAC1EBEABEC77 /* GuestTelemetry.swift in Sources */,
+				539C1777774B0ECF2B6CF0C3 /* IncidentReport.swift in Sources */,
+				F7B1123BC5C3EDD7A2F30D80 /* LiveDataAdapter.swift in Sources */,
+				023842E7CCE18D72FD05105D /* Localization.swift in Sources */,
+				1DC25AC5981E154FB1AD0B8B /* MockDataProvider.swift in Sources */,
+				622C93126F852DEE54DC501F /* Models.swift in Sources */,
+				80EEA93E65A6E0DA64B1844A /* Preferences.swift in Sources */,
+				6E75CEF407310496C4D29163 /* ProfileStore.swift in Sources */,
+				E60D7F01A419C0CA4E0B8E17 /* ProxmoxAPIService.swift in Sources */,
+				175C2A1419D82BE054F9DE82 /* ResourcePoller.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		8F456C6860D0BFE5F49843E3 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				5F84341EA1C624F523152C3A /* ActivityRingView.swift in Sources */,
+				E441D8E57B60AA9682D1CFA6 /* AddServerSheet.swift in Sources */,
+				1A1FDCBE553E3A7B1FEB085D /* DashboardModel.swift in Sources */,
+				F179CE243FC7B4860F789238 /* DashboardView.swift in Sources */,
+				7D955597A426D7B36954F294 /* DesignSystem.swift in Sources */,
+				D5344A54A3F15AA02E12189F /* GuestActionSheet.swift in Sources */,
+				0D18044786F81616BAA1ED06 /* GuestCard.swift in Sources */,
+				325F0CCAE76C01D3AAD5E91E /* GuestInspectorSheet.swift in Sources */,
+				7B243889EF849E946A24494E /* GuestResourcesView.swift in Sources */,
+				C18FC4797660D7B633E7FF47 /* IncidentSheet.swift in Sources */,
+				ECD5A54D86619FD06BAB5739 /* LocalizationViews.swift in Sources */,
+				7EDF0600124E8D6013B26653 /* MenuBarPopover.swift in Sources */,
+				C732A097B17004A0708CB257 /* NotificationService.swift in Sources */,
+				D944C5100639A1B94A06A00B /* ProxPulseApp.swift in Sources */,
+				5018A5DEAF2D2C3C2EB9798A /* RuntimeUIVerification.swift in Sources */,
+				E877530AF107E0D730DC1DB9 /* SettingsView.swift in Sources */,
+				24D0C77A47852B093201BDCE /* SunburstDiskView.swift in Sources */,
+				0394F4D645DC5C110335D18E /* TerminalLauncher.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		B94DD964C4AA83507F6DDE8C /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				BFD81A1F8B98F655FD3E0B24 /* ProxPulseWidget.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		CE07A9B830FAF75FB7ADFA9C /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				96D8A08D740BA479CD0A6F9B /* PulseWidgetViews.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		CE3EAE2ADF21694D9528AE10 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				5BC44E9D689C7D88FC9C4D59 /* DiagnosticEngineTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		178BF5B46F3804C65A1858BF /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 22AB4E9CE03FEEBFB495F480 /* ProxPulseWidgetUI */;
+			targetProxy = 45B6324A4A12EA9D5F533CF8 /* PBXContainerItemProxy */;
+		};
+		1B8FC3AD402829D80E4C0DEF /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 85BD3290C537FE6E51EDA44A /* ProxPulseCore */;
+			targetProxy = 1280D729995937D80F8B650C /* PBXContainerItemProxy */;
+		};
+		3AB7387FA940C568EF33E446 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 85BD3290C537FE6E51EDA44A /* ProxPulseCore */;
+			targetProxy = 11E956793CC47C9B227E71FF /* PBXContainerItemProxy */;
+		};
+		ADA45A4DE8165352B3A8778E /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 424D516B21C31B514FB82847 /* ProxPulseWidget */;
+			targetProxy = 4A9926DB6AF17D3B54E73A30 /* PBXContainerItemProxy */;
+		};
+		B46DB07E49EBA562C4D68A66 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 22AB4E9CE03FEEBFB495F480 /* ProxPulseWidgetUI */;
+			targetProxy = DD3CD8039A9DE52D9D20891F /* PBXContainerItemProxy */;
+		};
+		BD47D947412EBF138961DB1B /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 85BD3290C537FE6E51EDA44A /* ProxPulseCore */;
+			targetProxy = 4447574130AA5DF0E0577B80 /* PBXContainerItemProxy */;
+		};
+		D431A358D937929961715052 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 85BD3290C537FE6E51EDA44A /* ProxPulseCore */;
+			targetProxy = 5055DBD4CF642B32F74BE7CC /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		14B9360ED206B674F591B38E /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = ProxPulse.entitlements;
+				COMBINE_HIDPI_IMAGES = YES;
+				INFOPLIST_FILE = AppInfo.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = ProxPulse;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				OTHER_LDFLAGS = (
+					"$(inherited)",
+					"-ObjC",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = dev.proxpulse.app;
+				SDKROOT = macosx;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "$(inherited) PROXPULSE_XCODE";
+			};
+			name = Debug;
+		};
+		182587EAA39188F96E6CE3C1 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				CODE_SIGN_ENTITLEMENTS = ProxPulse.entitlements;
+				COMBINE_HIDPI_IMAGES = YES;
+				INFOPLIST_FILE = WidgetExtension/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@executable_path/../../../../Frameworks",
+				);
+				OTHER_LDFLAGS = (
+					"$(inherited)",
+					"-ObjC",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = dev.proxpulse.app.widget;
+				SDKROOT = macosx;
+				SKIP_INSTALL = YES;
+			};
+			name = Debug;
+		};
+		3E058402B3034C24525DB843 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				COMBINE_HIDPI_IMAGES = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@loader_path/../Frameworks",
+				);
+				OTHER_LDFLAGS = (
+					"$(inherited)",
+					"-ObjC",
+				);
+				SDKROOT = macosx;
+			};
+			name = Release;
+		};
+		551B5E242C6E4B1F0D9C907B /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = dev.proxpulse.core;
+				SDKROOT = macosx;
+				SKIP_INSTALL = YES;
+			};
+			name = Release;
+		};
+		60DB0A60018726CD86C269AE /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				COMBINE_HIDPI_IMAGES = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				SDKROOT = macosx;
+				SKIP_INSTALL = YES;
+			};
+			name = Release;
+		};
+		643408753D6642C1AA091C26 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = dev.proxpulse.core;
+				SDKROOT = macosx;
+				SKIP_INSTALL = YES;
+			};
+			name = Debug;
+		};
+		65F592EE7392B6D617EA96CC /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_STYLE = Automatic;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 7;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MARKETING_VERSION = 0.1.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_STRICT_CONCURRENCY = complete;
+				SWIFT_VERSION = 6.0;
+			};
+			name = Release;
+		};
+		7E5E1B92A37301950C255762 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				COMBINE_HIDPI_IMAGES = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@loader_path/../Frameworks",
+				);
+				OTHER_LDFLAGS = (
+					"$(inherited)",
+					"-ObjC",
+				);
+				SDKROOT = macosx;
+			};
+			name = Debug;
+		};
+		84E210FC5D0012EC0D077347 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				CODE_SIGN_ENTITLEMENTS = ProxPulse.entitlements;
+				COMBINE_HIDPI_IMAGES = YES;
+				INFOPLIST_FILE = WidgetExtension/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@executable_path/../../../../Frameworks",
+				);
+				OTHER_LDFLAGS = (
+					"$(inherited)",
+					"-ObjC",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = dev.proxpulse.app.widget;
+				SDKROOT = macosx;
+				SKIP_INSTALL = YES;
+			};
+			name = Release;
+		};
+		9F78C7F052F9CAA1AE17763D /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_STYLE = Automatic;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 7;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MARKETING_VERSION = 0.1.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_STRICT_CONCURRENCY = complete;
+				SWIFT_VERSION = 6.0;
+			};
+			name = Debug;
+		};
+		B639FD8C3782C76B49B33096 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = ProxPulse.entitlements;
+				COMBINE_HIDPI_IMAGES = YES;
+				INFOPLIST_FILE = AppInfo.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = ProxPulse;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				OTHER_LDFLAGS = (
+					"$(inherited)",
+					"-ObjC",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = dev.proxpulse.app;
+				SDKROOT = macosx;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "$(inherited) PROXPULSE_XCODE";
+			};
+			name = Release;
+		};
+		DFE5DD509647BD4D7BB7AB75 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				COMBINE_HIDPI_IMAGES = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				SDKROOT = macosx;
+				SKIP_INSTALL = YES;
+			};
+			name = Debug;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		22CD7DE1BBB8C70EC35BA200 /* Build configuration list for PBXNativeTarget "ProxPulseWidget" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				182587EAA39188F96E6CE3C1 /* Debug */,
+				84E210FC5D0012EC0D077347 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		2588BBE4802EEC490C7F771C /* Build configuration list for PBXNativeTarget "ProxPulse" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				14B9360ED206B674F591B38E /* Debug */,
+				B639FD8C3782C76B49B33096 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		2F98E8B33D30A561537A9C53 /* Build configuration list for PBXProject "ProxPulse" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				9F78C7F052F9CAA1AE17763D /* Debug */,
+				65F592EE7392B6D617EA96CC /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		30A5792398FB1C30FC442D3B /* Build configuration list for PBXNativeTarget "ProxPulseCoreTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				7E5E1B92A37301950C255762 /* Debug */,
+				3E058402B3034C24525DB843 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		471BFD0BEDF2161CFDFF738F /* Build configuration list for PBXNativeTarget "ProxPulseWidgetUI" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				DFE5DD509647BD4D7BB7AB75 /* Debug */,
+				60DB0A60018726CD86C269AE /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		B6B5780A54361F9CAAA9D429 /* Build configuration list for PBXNativeTarget "ProxPulseCore" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				643408753D6642C1AA091C26 /* Debug */,
+				551B5E242C6E4B1F0D9C907B /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = B9BC1920BC2ED1CA543C07D6 /* Project object */;
+}
