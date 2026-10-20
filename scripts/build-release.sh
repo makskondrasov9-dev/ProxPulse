@@ -3,13 +3,18 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 source scripts/swift-environment.sh
-VERSION=0.1.0
-BUILD=7
+VERSION=0.2.0
+BUILD=12
 RELEASE="$PWD/.build/public-release"
 APP="$RELEASE/ProxPulse.app"
 mkdir -p "$RELEASE"
-swift "${compiler_flags[@]}" scripts/make-icon.swift
-iconutil -c icns Resources/AppIcon.iconset -o Resources/AppIcon.icns
+if [[ "${PROXPULSE_REUSE_ICON:-0}" == "1" ]]; then
+    [[ -s Resources/AppIcon.icns ]] || { print -u2 'Missing existing AppIcon.icns'; exit 1; }
+    print 'Using the existing version-controlled AppIcon.icns'
+else
+    swift "${compiler_flags[@]}" scripts/make-icon.swift
+    iconutil -c icns Resources/AppIcon.iconset -o Resources/AppIcon.icns
+fi
 for architecture in x86_64 arm64; do
     triple="$architecture-apple-macosx14.0"
     scratch="$PWD/.build/production-$architecture"

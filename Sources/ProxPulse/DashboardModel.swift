@@ -16,6 +16,19 @@ struct MetricSample: Identifiable {
     var availableNodes: [String] = []
     var node = MockDataProvider.node
     var selectedPage = "Обзор"
+    var workspaceMode = WorkspaceViewMode(rawValue: UserDefaults.standard.string(forKey: "pulse.workspaceMode") ?? "grid") ?? .grid { didSet { if persistSelection { UserDefaults.standard.set(workspaceMode.rawValue, forKey: "pulse.workspaceMode") } } }
+    var creationKind: GuestKind?
+    var pendingDestroy: PendingDestroy?
+    var networkInterfaces: [NodeNetworkInterface] = []
+    var topologyError: String?
+    var loadingTopology = false
+    var tunnelMeasurements: [String: TunnelMeasurement] = [:]
+    var tunnelErrors: [String: String] = [:]
+    var probingTunnels = false
+    var topologyProbeError: String?
+    var topologyGuestAddresses: [String: [String]] = [:]
+    var topologyAddressErrors: [String: String] = [:]
+    private var topologyAddressDate: Date?
     var search = ""
     var guestFilter = "Все"
     var notice: String?
@@ -137,7 +150,7 @@ struct MetricSample: Identifiable {
     }
     func samples(for guest: Guest) -> [GuestSample] { guestHistory[MonitoringRules.guestKey(guest)] ?? [] }
     func switchProfile() {
-        incidentPresented = false; inspectedGuest = nil
+        incidentPresented = false; inspectedGuest = nil; pendingDestroy = nil; creationKind = nil
         changingProfile = true
         availableNodes = []; selectedNode = ""
         changingProfile = false
@@ -148,8 +161,8 @@ struct MetricSample: Identifiable {
         pollTask?.cancel(); sleepTask?.cancel(); offlineTask?.cancel(); diagnosticTask?.cancel(); addressTask?.cancel()
         operationTasks.values.forEach { $0.cancel() }; operationTasks = [:]; busyGuests = []
         rules = MonitoringRules(); revision += 1
-        isDiagnosing = false; service = nil; connectionError = nil
-        if clear { guestHistory = [:]; inspectedGuest = nil; history = []; hasSnapshot = false; node = .empty(name: selectedNode.isEmpty ? profileName : selectedNode); incidentReport = IncidentReport() }
+        isDiagnosing = false; loadingTopology = false; probingTunnels = false; service = nil; connectionError = nil
+        if clear { topologyProbeError = nil; topologyGuestAddresses = [:]; topologyAddressErrors = [:]; topologyAddressDate = nil; networkInterfaces = []; topologyError = nil; tunnelMeasurements = [:]; tunnelErrors = [:]; guestHistory = [:]; inspectedGuest = nil; history = []; hasSnapshot = false; node = .empty(name: selectedNode.isEmpty ? profileName : selectedNode); incidentReport = IncidentReport() }
         if isDemo {
             node = MockDataProvider.node; incidentReport = .demo; hasSnapshot = true; isLoading = false; lastUpdated = Date()
             publishSnapshot(force: true); return
@@ -232,6 +245,105 @@ struct MetricSample: Identifiable {
     }
     func refresh() {
         if isDemo { lastUpdated = Date() } else { sleepTask?.cancel() }
+    }
+    func creationCatalog(node: String, kind: GuestKind) async throws -> CreationCatalog {
+        if isDemo { var catalog = CreationCatalog.demo; catalog.nextID = max(99, self.node.guests.map(\.id).max() ?? 99) + 1; return catalog }
+        guard let service else { throw ProxmoxError.invalidResponse }
+        return try await service.creationCatalog(node: node, kind: kind)
+    }
+    func create(_ spec: GuestCreationSpec, password: String, accepted: (String) -> Void) async throws {
+        _ = try spec.parameters(password: password)
+        guard !node.guests.contains(where: { $0.id == spec.vmid }) else { throw ProvisionError.invalid("VMID уже занят. Обновите свободный ID.") }
+        if isDemo {
+            var guest = Guest(id: spec.vmid, name: spec.name, node: spec.node, kind: spec.kind, running: false, cpu: 0, memoryGB: 0, maxMemoryGB: Double(spec.memoryMB) * 1_048_576 / 1e9, diskGB: 0, role: spec.node)
+            guest.cpuCount = spec.cores * (spec.kind == .qemu ? spec.sockets : 1); guest.maxDiskGB = Double(spec.diskGB) * 1.073741824; guest.osType = spec.kind == .qemu ? spec.osType : "linux"; guest.bridges = [spec.bridge]
+            guest.maxSwapGB = spec.kind == .lxc ? Double(spec.swapMB) * 1_048_576 / 1e9 : nil
+            node.guests.append(guest); publishSnapshot(force: true); return
+        }
+        guard let service, connectionError == nil else { throw ProvisionError.invalid("Дождитесь подключения к серверу.") }
+        let current = revision
+        let upid = try await service.createGuest(spec, password: password)
+        accepted(upid)
+        try await service.waitForTask(node: spec.node, upid: upid, timeout: 300)
+        guard current == revision else { throw CancellationError() }
+        refresh(); notice = "Машина создана и оставлена выключенной."
+    }
+    func destroy(_ guest: Guest, confirmation: String) async throws {
+        guard DestroyGuard.matches(confirmation, guest: guest) else { throw ProvisionError.invalid("Введите точный VMID или имя машины.") }
+        guard !guest.running else { throw ProvisionError.invalid("Сначала остановите машину.") }
+        guard !busyGuests.contains(guest.id) else { throw ProxmoxError.invalidResponse }
+        busyGuests.insert(guest.id)
+        let current = revision
+        defer { if current == revision { busyGuests.remove(guest.id) } }
+        if !isDemo {
+            guard let service, connectionError == nil else { throw ProxmoxError.invalidResponse }
+            let upid = try await service.destroyGuest(guest, confirmation: confirmation)
+            try await service.waitForTask(node: guest.node, upid: upid, timeout: 300)
+            guard current == revision else { throw CancellationError() }
+        }
+        node.guests.removeAll { MonitoringRules.guestKey($0) == MonitoringRules.guestKey(guest) }
+        guestHistory.removeValue(forKey: MonitoringRules.guestKey(guest))
+        pendingDestroy = nil; inspectedGuest = nil
+        publishSnapshot(force: true); refresh()
+    }
+    func refreshTopology(sshMetrics: Bool = true) async {
+        guard !loadingTopology else { return }
+        if isDemo {
+            networkInterfaces = [.init(iface: "vmbr0", type: "bridge", active: 1), .init(iface: "vmbr1", type: "bridge", active: 1), .init(iface: "awg0", type: "tunnel", active: 1)]
+            tunnelMeasurements["awg0"] = try? JSONDecoder().decode(TunnelMeasurement.self, from: Data(#"{"peer":"203.0.113.10","pingMS":24.7,"receiveBps":128000,"transmitBps":42000}"#.utf8))
+            for guest in node.guests { topologyGuestAddresses[MonitoringRules.guestKey(guest)] = ["192.168.31.\(guest.id)"] }
+            return
+        }
+        guard let service, hasSnapshot else { return }
+        let current = revision
+        loadingTopology = true
+        defer { if current == revision { loadingTopology = false; probingTunnels = false } }
+        var configuredInterfaces = networkInterfaces
+        // Publish configuration and runtime links together to avoid removing VPNs during each poll.
+        do {
+            let configured = try await service.network(node: node.id)
+            guard current == revision, !Task.isCancelled else { return }
+            configuredInterfaces = configured; topologyError = nil
+        } catch { if current == revision { topologyError = error.localizedDescription } }
+        guard current == revision, !Task.isCancelled else { return }
+        if topologyAddressDate == nil || Date().timeIntervalSince(topologyAddressDate!) > 45 {
+            let guests = node.guests.filter { $0.node == node.id && $0.running }
+            let addresses = await withTaskGroup(of: (String, [String], String?).self) { group in
+                for guest in guests {
+                    group.addTask {
+                        do { return (MonitoringRules.guestKey(guest), try await service.guestAddresses(guest, primaryFirst: true), nil) }
+                        catch { return (MonitoringRules.guestKey(guest), [], error.localizedDescription) }
+                    }
+                }
+                var result: [(String, [String], String?)] = []
+                for await value in group { result.append(value) }
+                return result
+            }
+            guard current == revision, !Task.isCancelled else { return }
+            topologyGuestAddresses = [:]; topologyAddressErrors = [:]
+            for (key, values, error) in addresses { topologyGuestAddresses[key] = values; topologyAddressErrors[key] = error }
+            topologyAddressDate = .now
+        }
+        if sshMetrics, let profile = profiles.first(where: { $0.id == selectedProfile }) {
+            probingTunnels = true
+            let host = (try? await service.sshHost(node: node.id)) ?? profile.endpoint.host ?? node.id
+            guard current == revision, !Task.isCancelled else { return }
+            let user = UserDefaults.standard.string(forKey: PreferenceKey.sshUser) ?? "root"
+            do {
+                let runtime = try await TunnelProbe.discover(host: host, user: user)
+                guard current == revision, !Task.isCancelled else { return }
+                var interfaces = Dictionary(uniqueKeysWithValues: configuredInterfaces.map { ($0.iface, $0) })
+                for interface in runtime.interfaces { interfaces[interface.iface] = interface }
+                networkInterfaces = interfaces.values.sorted { $0.iface < $1.iface }
+                tunnelMeasurements = runtime.measurements; tunnelErrors = runtime.errors; topologyProbeError = nil
+            } catch {
+                if current == revision {
+                    let previousTunnels = networkInterfaces.filter { previous in previous.isTunnel && !configuredInterfaces.contains(where: { $0.iface == previous.iface }) }
+                    networkInterfaces = configuredInterfaces + previousTunnels.map { interface in var stale = interface; stale.active = 0; return stale }
+                    tunnelMeasurements = [:]; topologyProbeError = error.localizedDescription
+                }
+            }
+        } else { networkInterfaces = configuredInterfaces; tunnelMeasurements = [:]; topologyProbeError = nil }
     }
     func showIncidents() {
         incidentPresented = true

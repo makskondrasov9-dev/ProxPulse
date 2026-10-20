@@ -89,6 +89,8 @@ public struct StorageStatus: Decodable, Sendable {
     public var active: Int?
     public var enabled: Int?
     public var type: String?
+    public var content: String?
+    public var avail: Double?
 }
 public struct ServiceStatus: Decodable, Sendable {
     public var service: String
@@ -107,6 +109,7 @@ public actor ProxmoxAPIService {
     private let profile: ServerProfile
     private let session: URLSession
     private let suppliedSecret: String?
+    private var configCache: [String: (Date, GuestConfiguration)] = [:]
     private var networkSampler = GuestNetworkSampler()
     private var ticket: String?
     private var csrf: String?
@@ -155,8 +158,10 @@ public actor ProxmoxAPIService {
         guard let prevention = result.CSRFPreventionToken else { throw ProxmoxError.invalidResponse }
         ticket = value; csrf = prevention; ticketDate = Date()
     }
-    private func request<T: Decodable & Sendable>(_ path: [String], method: String = "GET", query: [URLQueryItem] = [], as: T.Type, retry: Bool = true) async throws -> T {
+    private func request<T: Decodable & Sendable>(_ path: [String], method: String = "GET", query: [URLQueryItem] = [], form: [String: String] = [:], as: T.Type, retry: Bool = true) async throws -> T {
+        try Task.checkCancellation()
         try await authenticate()
+        try Task.checkCancellation()
         var request = URLRequest(url: url(path, query: query)); request.httpMethod = method
         if profile.authMode == .apiToken {
             request.setValue("PVEAPIToken=\(profile.tokenID)=\(try secret())", forHTTPHeaderField: "Authorization")
@@ -164,10 +169,15 @@ public actor ProxmoxAPIService {
             request.setValue("PVEAuthCookie=\(ticket ?? "")", forHTTPHeaderField: "Cookie")
             if method != "GET" { request.setValue(csrf, forHTTPHeaderField: "CSRFPreventionToken") }
         }
+        if !form.isEmpty {
+            request.setValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
+            let allowed = CharacterSet.alphanumerics.union(CharacterSet(charactersIn: "-._~"))
+            request.httpBody = Data(form.sorted { $0.key < $1.key }.map { $0.key + "=" + $0.value.addingPercentEncoding(withAllowedCharacters: allowed)! }.joined(separator: "&").utf8)
+        }
         do { return try await decode(request, as: T.self) }
         catch ProxmoxError.http(401) where profile.authMode == .password && retry {
             ticket = nil; ticketDate = nil
-            return try await self.request(path, method: method, query: query, as: T.self, retry: false)
+            return try await self.request(path, method: method, query: query, form: form, as: T.self, retry: false)
         }
     }
     public func resources() async throws -> [ClusterResource] { try await request(["cluster", "resources"], as: [ClusterResource].self) }
@@ -196,21 +206,29 @@ public actor ProxmoxAPIService {
         // Bounded fan-out keeps large clusters from saturating pveproxy. A denied guest must not blank the dashboard.
         for start in stride(from: 0, to: guests.count, by: 4) {
             let batch = Array(guests[start..<min(start + 4, guests.count)])
-            let results = await withTaskGroup(of: (Guest, GuestStatus?, String?, Date).self) { group in
+            let results = await withTaskGroup(of: (Guest, GuestStatus?, GuestConfiguration?, String?, Date).self) { group in
                 for guest in batch {
                     group.addTask {
-                        do { return (guest, try await self.guestStatus(guest), nil, Date()) }
-                        catch { return (guest, nil, error.localizedDescription, Date()) }
+                        do {
+                            let status = try await self.guestStatus(guest)
+                            let config = try? await self.guestConfiguration(guest)
+                            return (guest, status, config, nil, Date())
+                        }
+                        catch { return (guest, nil, nil, error.localizedDescription, Date()) }
                     }
                 }
-                var result: [(Guest, GuestStatus?, String?, Date)] = []
+                var result: [(Guest, GuestStatus?, GuestConfiguration?, String?, Date)] = []
                 for await item in group { result.append(item) }
                 return result
             }
             try Task.checkCancellation()
-            for (guest, status, error, date) in results {
+            for (guest, status, config, error, date) in results {
                 guard let index = node.guests.firstIndex(where: { MonitoringRules.guestKey($0) == MonitoringRules.guestKey(guest) }) else { continue }
-                if let status { node.guests[index] = networkSampler.apply(status, to: guest, date: date) }
+                if let status {
+                    node.guests[index] = networkSampler.apply(status, to: guest, date: date)
+                    node.guests[index].osType = config?.osType
+                    node.guests[index].bridges = config?.bridges
+                }
                 else { networkSampler.invalidate(guest); node.guests[index].telemetryError = error }
             }
         }
@@ -232,15 +250,25 @@ public actor ProxmoxAPIService {
         enum CodingKeys: String, CodingKey { case name, inet, inet6; case addresses = "ip-addresses" }
     }
     private struct AgentInterfaces: Decodable, Sendable { var result: [GuestInterface] }
-    public func guestAddresses(_ guest: Guest) async throws -> [String] {
+    public func guestAddresses(_ guest: Guest, primaryFirst: Bool = false) async throws -> [String] {
         guard guest.running else { return [] }
         let base = ["nodes", guest.node, guest.kind.rawValue, String(guest.id)]
         let interfaces: [GuestInterface]
         if guest.kind == .lxc { interfaces = try await request(base + ["interfaces"], as: [GuestInterface].self) }
         else { interfaces = try await request(base + ["agent", "network-get-interfaces"], as: AgentInterfaces.self).result }
-        return Array(Set(interfaces.filter { $0.name != "lo" }.flatMap { item in
+        func priority(_ interface: GuestInterface) -> Int {
+            let name = interface.name ?? ""
+            if name.hasPrefix("docker") || name.hasPrefix("br-") || name.hasPrefix("veth") { return 3 }
+            if name.hasPrefix("wg") || name.hasPrefix("awg") || name.hasPrefix("tun") { return 2 }
+            return name.hasPrefix("eth") || name.hasPrefix("en") || name.hasPrefix("bond") ? 0 : 1
+        }
+        let ordered = primaryFirst ? interfaces.sorted { priority($0) == priority($1) ? ($0.name ?? "") < ($1.name ?? "") : priority($0) < priority($1) } : interfaces
+        let addresses = ordered.filter { $0.name != "lo" }.flatMap { item in
             [item.inet, item.inet6].compactMap { $0 } + (item.addresses ?? []).map(\.address)
-        }.map { $0.components(separatedBy: "/")[0] }.filter { !$0.hasPrefix("127.") && $0 != "::1" && !$0.hasPrefix("fe80:") && !$0.isEmpty })).sorted()
+        }.map { $0.components(separatedBy: "/")[0] }.filter { !$0.hasPrefix("127.") && $0 != "::1" && !$0.hasPrefix("fe80:") && !$0.isEmpty }
+        if !primaryFirst { return Array(Set(addresses)).sorted() }
+        var seen: Set<String> = []
+        return addresses.filter { seen.insert($0).inserted }
     }
     public func diagnostics(node: String, storage: DiskItem, guests: [Guest]) async -> IncidentReport {
         var report = IncidentReport.live(storage: storage, guests: guests)
@@ -254,12 +282,57 @@ public actor ProxmoxAPIService {
         } catch { report.unavailable("services", reason: error.localizedDescription) }
         return report
     }
-    private struct NetworkInterface: Decodable, Sendable { var address: String?; var gateway: String?; var active: Int?; var iface: String? }
     public func sshHost(node: String) async throws -> String? {
-        let interfaces = try await request(["nodes", node, "network"], as: [NetworkInterface].self)
+        let interfaces = try await request(["nodes", node, "network"], as: [NodeNetworkInterface].self)
         let usable = interfaces.filter { $0.iface != "lo" && $0.active != 0 && !($0.address ?? "").isEmpty }
         let selected = usable.first { !($0.gateway ?? "").isEmpty } ?? usable.first
         return selected?.address?.components(separatedBy: "/").first
+    }
+    public func guestConfiguration(_ guest: Guest) async throws -> GuestConfiguration {
+        let key = MonitoringRules.guestKey(guest)
+        if let (date, config) = configCache[key], Date().timeIntervalSince(date) < 30 { return config }
+        let value = try await request(["nodes", guest.node, guest.kind.rawValue, String(guest.id), "config"], as: GuestConfiguration.self)
+        configCache[key] = (Date(), value); return value
+    }
+    public func network(node: String) async throws -> [NodeNetworkInterface] {
+        try await request(["nodes", node, "network"], as: [NodeNetworkInterface].self)
+    }
+    private struct NextID: Decodable, Sendable {
+        var value: Int
+        init(from decoder: Decoder) throws {
+            let c = try decoder.singleValueContainer()
+            if let n = try? c.decode(Int.self) { value = n }
+            else if let n = Int(try c.decode(String.self)) { value = n }
+            else { throw ProxmoxError.invalidResponse }
+        }
+    }
+    public func nextGuestID() async throws -> Int { try await request(["cluster", "nextid"], as: NextID.self).value }
+    public func creationCatalog(node: String, kind: GuestKind) async throws -> CreationCatalog {
+        let next = try await nextGuestID()
+        let pools = try await request(["nodes", node, "storage"], as: [StorageStatus].self)
+        let interfaces = try await network(node: node)
+        let enabled = pools.filter { $0.active == 1 && $0.enabled != 0 }
+        let mediaKind = kind == .lxc ? "vztmpl" : "iso"
+        var media: [CreationMedia] = []; var warnings: [String] = []
+        for pool in enabled where (pool.content ?? "").split(separator: ",").contains(Substring(mediaKind)) {
+            do { media += try await request(["nodes", node, "storage", pool.storage, "content"], query: [.init(name: "content", value: mediaKind)], as: [CreationMedia].self) }
+            catch { warnings.append(pool.storage + ": " + error.localizedDescription) }
+        }
+        return CreationCatalog(nextID: next, storage: enabled.map { .init(id: $0.storage, content: Set(($0.content ?? "").split(separator: ",").map(String.init)), available: $0.avail) }, media: media.sorted { $0.volid < $1.volid }, bridges: interfaces.filter(\.isBridge).map(\.iface).sorted(), warnings: warnings)
+    }
+    public func createGuest(_ spec: GuestCreationSpec, password: String) async throws -> String {
+        let form = try spec.parameters(password: password)
+        let catalog = try await creationCatalog(node: spec.node, kind: spec.kind)
+        try catalog.validate(spec)
+        try Task.checkCancellation()
+        return try await request(["nodes", spec.node, spec.kind.rawValue], method: "POST", form: form, as: String.self)
+    }
+    public func destroyGuest(_ guest: Guest, confirmation: String) async throws -> String {
+        guard DestroyGuard.matches(confirmation, guest: guest) else { throw ProvisionError.invalid("Введите точный VMID или имя машины.") }
+        let status = try await guestStatus(guest)
+        guard status.status == "stopped" else { throw ProvisionError.invalid("Сначала остановите машину.") }
+        try Task.checkCancellation()
+        return try await request(["nodes", guest.node, guest.kind.rawValue, String(guest.id)], method: "DELETE", query: [.init(name: "purge", value: "1")], as: String.self)
     }
     public enum GuestAction: String, CaseIterable, Sendable { case start, reboot, shutdown, stop }
     public struct TaskStatus: Decodable, Sendable { public var status: String; public var exitstatus: String? }

@@ -27,6 +27,8 @@ public struct Guest: Identifiable, Codable, Sendable {
     public var diskGB: Double
     public var role: String
     public var cpuCount: Int? = nil
+    public var osType: String? = nil
+    public var bridges: [String]? = nil
     public var swapGB: Double? = nil
     public var maxSwapGB: Double? = nil
     public var maxDiskGB: Double? = nil

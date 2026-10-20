@@ -9,6 +9,34 @@ import WidgetKit
     @State private var model = DashboardModel()
     init() {
         #if DEBUG
+        if CommandLine.arguments.contains("--release-media") {
+            Task { @MainActor in
+                do { try await ReleaseMediaVerification.run(); exit(0) }
+                catch { print("RELEASE MEDIA: \(error.localizedDescription)"); exit(1) }
+            }
+            RunLoop.main.run()
+        }
+        if CommandLine.arguments.contains("--verify-sprint51") || CommandLine.arguments.contains("--verify-sprint52") {
+            Task { @MainActor in
+                do { try await Sprint51Verification.run(hardBounds: CommandLine.arguments.contains("--verify-sprint52")); exit(0) }
+                catch { print("SPRINT 5.1 CHECK: \(error.localizedDescription)"); exit(1) }
+            }
+            RunLoop.main.run()
+        }
+        if CommandLine.arguments.contains("--verify-topology-live") || CommandLine.arguments.contains("--verify-topology-demo") {
+            Task { @MainActor in
+                do { try await TopologyVerification.run(live: CommandLine.arguments.contains("--verify-topology-live")); exit(0) }
+                catch { print("TOPOLOGY CHECK: \(error.localizedDescription)"); exit(1) }
+            }
+            RunLoop.main.run()
+        }
+        if CommandLine.arguments.contains("--verify-sprint5") {
+            Task { @MainActor in
+                do { try await Sprint5Verification.run(); exit(0) }
+                catch { print("FAIL Sprint 5: \(error.localizedDescription)"); exit(1) }
+            }
+            RunLoop.main.run()
+        }
         if CommandLine.arguments.contains("--verify-widget-share") {
             do {
                 guard let directory = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: WidgetSnapshotStore.appGroup) else { throw CocoaError(.fileWriteNoPermission) }
@@ -177,7 +205,7 @@ import WidgetKit
                     RuntimeUIVerification.capture(DashboardView(model: model, animate: false).pulseAppearance(), size: .init(width: 1440, height: 1100), name: "sprint4-live-settings")
                     if let guest = result.node.guests.first(where: { ($0.swapGB ?? 0) > 0 }) ?? result.node.guests.first {
                         do { model.guestAddresses = try await api.guestAddresses(guest) } catch { model.addressError = error.localizedDescription }
-                        RuntimeUIVerification.capture(GuestInspectorSheet(model: model, original: guest).pulseAppearance(), size: .init(width: 760, height: 780), name: "sprint4-live-inspector")
+                        RuntimeUIVerification.capture(GuestInspectorSheet(model: model, original: guest).pulseAppearance(), size: .init(width: 880, height: 840), name: "sprint4-live-inspector")
                     }
                     guard result.node.guests.allSatisfy({ $0.telemetryDate != nil }) else { throw ProxmoxError.invalidResponse }
                     print("PASS: active server per-guest telemetry, two network counter samples, live dashboard/settings/inspector rendered")

@@ -25,3 +25,11 @@ PY
     compiler_flags=(-vfsoverlay "$PWD/.build/compat/overlay.json")
     package_flags=(-Xswiftc -vfsoverlay -Xswiftc "$PWD/.build/compat/overlay.json")
 fi
+
+# Keep all tool caches inside the checkout when running in a restricted environment.
+if [[ "${PROXPULSE_LOCAL_CACHE:-0}" == "1" ]]; then
+    export CLANG_MODULE_CACHE_PATH="$PWD/.build/sandbox-cache"
+    export SWIFTPM_MODULECACHE_OVERRIDE="$PWD/.build/sandbox-cache"
+    compiler_flags+=(-module-cache-path "$PWD/.build/sandbox-cache")
+    package_flags+=(--disable-sandbox --cache-path "$PWD/.build/sandbox-swiftpm" --config-path "$PWD/.build/sandbox-swiftpm/config" --security-path "$PWD/.build/sandbox-swiftpm/security" -Xswiftc -module-cache-path -Xswiftc "$PWD/.build/sandbox-cache")
+fi

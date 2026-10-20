@@ -45,24 +45,13 @@ struct GuestCard: View {
         .contentShape(RoundedRectangle(cornerRadius: 18))
         .onTapGesture { model.inspect(guest) }
         .accessibilityAction(named: Text(L10n.text("Подробнее", language: language))) { model.inspect(guest) }
-        .disabled(model.busyGuests.contains(guest.id) || (!model.isDemo && model.connectionError != nil))
         .onHover { value in withAnimation(.easeOut(duration: 0.15)) { hovering = value } }
-        .contextMenu {
-            LB("Подробнее") { model.inspect(guest) }
-            Divider()
-            LB("Запустить") { model.request(guest, action: .start) }.disabled(guest.running)
-            LB("Перезагрузить") { model.request(guest, action: .reboot) }.disabled(!guest.running)
-            LB("Завершить работу") { model.request(guest, action: .shutdown) }.disabled(!guest.running)
-            LB("Принудительно остановить", role: .destructive) { model.request(guest, action: .stop) }.disabled(!guest.running)
-            Divider()
-            LB("Консоль / SSH") { model.shell(guest) }
-            LB("Веб-консоль") { model.webConsole(guest) }
-            LB("Диагностика") { model.diagnosticGuest = guest }
-        }
+        .contextMenu { GuestContextMenu(guest: guest, model: model) }
         .accessibilityAction(named: Text(L10n.text("Показать действия", language: language))) { showActions.toggle() }
     }
     private func action(_ icon: String, _ title: String, perform: @escaping () -> Void) -> some View {
         Button(action: perform) { TL(title, systemImage: icon).labelStyle(.iconOnly).font(.system(size: 10, weight: .medium)).padding(.horizontal, 7).padding(.vertical, 5) }
             .buttonStyle(.plain).localizedHelp(title)
+            .disabled(model.busyGuests.contains(guest.id) || (!model.isDemo && model.connectionError != nil))
     }
 }

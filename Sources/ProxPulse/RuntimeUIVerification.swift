@@ -70,7 +70,7 @@ private struct AppearanceProbe: View {
         precondition(demo.selectedPage == "Настройки" && demo.search == "home")
         if let guest = demo.node.guests.first(where: { ($0.swapGB ?? 0) > 0 }) {
             demo.inspect(guest)
-            capture(GuestInspectorSheet(model: demo, original: guest).pulseAppearance().defaultAppStorage(defaults), size: .init(width: 760, height: 780), name: "sprint4-inspector-en")
+            capture(GuestInspectorSheet(model: demo, original: guest).pulseAppearance().defaultAppStorage(defaults), size: .init(width: 880, height: 840), name: "sprint4-inspector-en")
             demo.inspectedGuest = nil
         }
         capture(AddServerSheet(model: demo, existing: MockDataProvider.profiles[0]).pulseAppearance().defaultAppStorage(defaults), size: .init(width: 640, height: 735), name: "sprint4-edit-profile-en")

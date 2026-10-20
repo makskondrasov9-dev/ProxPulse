@@ -2,7 +2,7 @@ import SwiftUI
 import ProxPulseCore
 
 struct PendingGuestAction: Identifiable {
-    enum Origin { case dashboard, menuBar }
+    enum Origin { case dashboard, menuBar, inspector }
     var id = UUID()
     var guest: Guest
     var action: ProxmoxAPIService.GuestAction

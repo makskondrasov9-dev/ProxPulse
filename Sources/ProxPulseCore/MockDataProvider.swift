@@ -13,6 +13,8 @@ public enum MockDataProvider {
         Guest(id: 105, name: "windows-lab", node: "pve-01", kind: .qemu, running: false, cpu: 0, memoryGB: 0, maxMemoryGB: 16, diskGB: 128, role: "Testing environment")
     ].enumerated().map { index, source in
         var guest = source
+        guest.osType = source.kind == .lxc ? "debian" : index == 5 ? "win11" : "l26"
+        guest.bridges = [index == 4 ? "vmbr1" : "vmbr0"]
         guest.cpuCount = [4, 8, 4, 4, 2, 8][index]
         guest.swapGB = index == 1 ? 0.24 : 0; guest.maxSwapGB = 0.512
         guest.maxDiskGB = [160, 400, 192, 1400, 48, 200][index]; guest.diskUsageAvailable = true
