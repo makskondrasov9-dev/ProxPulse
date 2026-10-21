@@ -77,6 +77,7 @@ Homebrew (этот репозиторий используется как tap):
 ```sh
 brew tap makskondrasov9-dev/proxpulse https://github.com/makskondrasov9-dev/ProxPulse
 brew install --cask makskondrasov9-dev/proxpulse/proxpulse
+open /Applications/ProxPulse.app
 ```
 
 Для ручной установки:
@@ -145,6 +146,7 @@ Homebrew (this repository also serves as a tap):
 ```sh
 brew tap makskondrasov9-dev/proxpulse https://github.com/makskondrasov9-dev/ProxPulse
 brew install --cask makskondrasov9-dev/proxpulse/proxpulse
+open /Applications/ProxPulse.app
 ```
 
 Manual DMG installation:

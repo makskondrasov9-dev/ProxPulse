@@ -8,16 +8,17 @@ cask "proxpulse" do
   homepage "https://github.com/makskondrasov9-dev/ProxPulse"
 
   auto_updates true
-  depends_on macos: ">= :sonoma"
+  depends_on macos: :sonoma
   app "ProxPulse.app"
 
-  postflight do
-    system_command "/usr/bin/xattr", args: ["-cr", "#{appdir}/ProxPulse.app"]
-    system_command "/System/Library/Frameworks/CoreServices.framework/Frameworks/LaunchServices.framework/Support/lsregister",
-                   args: ["-f", "#{appdir}/ProxPulse.app"]
-    system_command "/usr/bin/pluginkit",
-                   args: ["-a", "#{appdir}/ProxPulse.app/Contents/PlugIns/ProxPulseWidget.appex"]
-    system_command "/usr/bin/pluginkit", args: ["-e", "use", "-i", "dev.proxpulse.app.widget"]
-    system_command "/usr/bin/open", args: ["#{appdir}/ProxPulse.app"]
+  postflight_steps do
+    run "/usr/bin/xattr", args: ["-cr", "{{appdir}}/ProxPulse.app"]
   end
+
+  caveats <<~EOS
+    Launch ProxPulse from Applications once after installation.
+    Then add its widgets from the macOS desktop widget gallery.
+    For automatic widget registration and launch, use the installer:
+      curl -fsSL https://raw.githubusercontent.com/makskondrasov9-dev/ProxPulse/main/scripts/install.sh | bash
+  EOS
 end
