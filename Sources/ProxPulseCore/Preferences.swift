@@ -4,6 +4,8 @@ public enum AppLanguage: String, CaseIterable, Codable, Sendable { case ru, en }
 public enum AppearanceChoice: String, CaseIterable, Codable, Sendable { case system, dark, light }
 public enum AccentChoice: String, CaseIterable, Codable, Sendable { case blue, neon, emerald, purple, orange }
 public enum PreferenceKey {
+    public static let widgetMachine = "pulse.widgetMachine"
+    public static let checkUpdates = "pulse.checkUpdatesAtLaunch"
     public static let language = "pulse.language"
     public static let appearance = "pulse.appearance"
     public static let accent = "pulse.accent"
@@ -75,5 +77,17 @@ public enum SSHCommand {
             command += " " + quote(guest.kind == .lxc ? "pct enter \(guest.id)" : "qm terminal \(guest.id)")
         }
         return "#!/bin/zsh\n" + command + "\n"
+    }
+}
+
+public enum WidgetMachineSelection {
+    public static func machine(profile: UUID, data: Data?) -> String? {
+        guard let data, let values = try? JSONDecoder().decode([String: String].self, from: data) else { return nil }
+        return values[profile.uuidString]
+    }
+    public static func setting(_ key: String, profile: UUID, data: Data?) -> Data {
+        var values = data.flatMap { try? JSONDecoder().decode([String: String].self, from: $0) } ?? [:]
+        values[profile.uuidString] = key.isEmpty ? nil : key
+        return (try? JSONEncoder().encode(values)) ?? Data()
     }
 }

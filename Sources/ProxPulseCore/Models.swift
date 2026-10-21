@@ -1,4 +1,5 @@
 import Foundation
+import Darwin
 
 public enum AuthenticationMode: String, Codable, CaseIterable, Sendable { case apiToken, password }
 
@@ -8,6 +9,7 @@ public struct ServerProfile: Identifiable, Codable, Hashable, Sendable {
     public var endpoint: URL
     public var tokenID: String
     public var allowInsecureSSL: Bool
+    public var externalTunnel: ExternalTunnel? = nil
     public var authentication: AuthenticationMode?
     public var authMode: AuthenticationMode { authentication ?? .apiToken }
     public init(id: UUID = UUID(), name: String, endpoint: URL, tokenID: String, allowInsecureSSL: Bool = false, authentication: AuthenticationMode = .apiToken) {
@@ -38,6 +40,7 @@ public struct Guest: Identifiable, Codable, Sendable {
     public var transmitBps: Double? = nil
     public var telemetryDate: Date? = nil
     public var telemetryError: String? = nil
+    public var ipAddresses: [String]? = nil
     public init(id: Int, name: String, node: String, kind: GuestKind, running: Bool, cpu: Double, memoryGB: Double, maxMemoryGB: Double, diskGB: Double, role: String) {
         self.id = id; self.name = name; self.node = node; self.kind = kind; self.running = running; self.cpu = cpu; self.memoryGB = memoryGB; self.maxMemoryGB = maxMemoryGB; self.diskGB = diskGB; self.role = role
     }
@@ -77,6 +80,7 @@ public struct WidgetSnapshot: Codable, Sendable {
     public var profileName: String? = nil
     public var state: WidgetConnectionState? = nil
     public var date: Date
+    public var writtenAt: Date? = .now
     public var node: String
     public var cpu: Double
     public var memory: Double
@@ -89,6 +93,7 @@ public struct WidgetSnapshot: Codable, Sendable {
     public var language: String?
     public var accent: String?
     public var appearance: String?
+    public var selectedMachineKey: String? = nil
     public init(node: NodeSnapshot, isDemo: Bool = false) {
         state = isDemo ? .demo : node.online ? .live : .offline
         date = Date(); self.node = node.id; cpu = node.cpu; self.isDemo = isDemo
@@ -102,22 +107,38 @@ public struct WidgetSnapshot: Codable, Sendable {
 public enum WidgetSnapshotStore {
     public static let appGroup = "group.proxpulsedata"
     public static let snapshotKey = "widget.snapshot.v2"
-    public static func save(_ snapshot: WidgetSnapshot) throws {
-        guard let directory = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: appGroup),
-              let defaults = UserDefaults(suiteName: appGroup) else { throw CocoaError(.fileWriteNoPermission) }
-        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+    public static var fallbackURL: URL {
+        // NSHomeDirectory is redirected inside App Sandbox; use the login user's actual home.
+        let home = getpwuid(getuid()).map { String(cString: $0.pointee.pw_dir) } ?? NSHomeDirectory()
+        return URL(fileURLWithPath: home).appendingPathComponent("Library/Application Support/ProxPulse/live_snapshot.json")
+    }
+    public static func writeMirror(_ snapshot: WidgetSnapshot, to url: URL) throws {
+        try FileManager.default.createDirectory(at: url.deletingLastPathComponent(), withIntermediateDirectories: true)
         let data = try JSONEncoder().encode(snapshot)
-        // The atomic mirror avoids cfprefsd propagation delays between app and sandboxed extension.
-        try data.write(to: directory.appendingPathComponent("snapshot.json"), options: .atomic)
-        defaults.set(data, forKey: snapshotKey)
-        defaults.synchronize()
+        try data.write(to: url, options: .atomic)
+        try FileManager.default.setAttributes([.posixPermissions: 0o600], ofItemAtPath: url.path)
+    }
+    public static func readMirror(at url: URL) -> WidgetSnapshot? {
+        guard let data = try? Data(contentsOf: url), data.count <= 8_000_000 else { return nil }
+        return try? JSONDecoder().decode(WidgetSnapshot.self, from: data)
+    }
+    public static func save(_ snapshot: WidgetSnapshot) throws {
+        // The fallback is mandatory and independent of App Group entitlement availability.
+        try writeMirror(snapshot, to: fallbackURL)
+        if let directory = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: appGroup),
+           let defaults = UserDefaults(suiteName: appGroup),
+           (try? writeMirror(snapshot, to: directory.appendingPathComponent("snapshot.json"))) != nil {
+            defaults.set(try JSONEncoder().encode(snapshot), forKey: snapshotKey)
+            defaults.synchronize()
+        }
     }
     public static func load() -> WidgetSnapshot? {
-        // Read afresh for every provider request. No process-local or DEMO fallback cache.
-        if let directory = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: appGroup),
-           let data = try? Data(contentsOf: directory.appendingPathComponent("snapshot.json")),
-           let snapshot = try? JSONDecoder().decode(WidgetSnapshot.self, from: data) { return snapshot }
-        return loadPreferences()
+        let grouped = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: appGroup)
+            .flatMap { readMirror(at: $0.appendingPathComponent("snapshot.json")) } ?? loadPreferences()
+        let fallback = readMirror(at: fallbackURL)
+        // An accessible but stale group must not mask a newer file from another installation.
+        if let fallback, grouped == nil || (fallback.writtenAt ?? fallback.date) > (grouped!.writtenAt ?? grouped!.date) { return fallback }
+        return grouped
     }
     public static func loadPreferences() -> WidgetSnapshot? {
         guard let data = UserDefaults(suiteName: appGroup)?.data(forKey: snapshotKey) else { return nil }

@@ -5,8 +5,8 @@ options:
     macOS: '14.0'
 settings:
   base:
-    MARKETING_VERSION: 0.2.0
-    CURRENT_PROJECT_VERSION: 12
+    MARKETING_VERSION: 0.2.1
+    CURRENT_PROJECT_VERSION: 13
     SWIFT_VERSION: '6.0'
     MACOSX_DEPLOYMENT_TARGET: '14.0'
     CODE_SIGN_STYLE: Automatic
@@ -35,12 +35,14 @@ targets:
       - path: Sources/ProxPulse
       - path: Resources/AppIcon.icns
         buildPhase: resources
+      - path: scripts/install.sh
+        buildPhase: resources
     info:
       path: AppInfo.plist
       properties:
         CFBundleIconFile: AppIcon.icns
-        CFBundleShortVersionString: 0.2.0
-        CFBundleVersion: "12"
+        CFBundleShortVersionString: 0.2.1
+        CFBundleVersion: "13"
         CFBundleURLTypes:
           - CFBundleURLName: dev.proxpulse.dashboard
             CFBundleURLSchemes: [proxpulse]
@@ -52,7 +54,7 @@ targets:
     settings:
       PRODUCT_BUNDLE_IDENTIFIER: dev.proxpulse.app
       SWIFT_ACTIVE_COMPILATION_CONDITIONS: '$(inherited) PROXPULSE_XCODE'
-      CODE_SIGN_ENTITLEMENTS: ProxPulse.entitlements
+      CODE_SIGN_ENTITLEMENTS: ProxPulse.local.entitlements
       INFOPLIST_KEY_LSApplicationCategoryType: public.app-category.utilities
       INFOPLIST_KEY_CFBundleDisplayName: ProxPulse
   ProxPulseWidget:
@@ -70,8 +72,8 @@ targets:
       properties:
         CFBundleDisplayName: ProxPulse
         CFBundleIconFile: AppIcon.icns
-        CFBundleShortVersionString: 0.2.0
-        CFBundleVersion: "12"
+        CFBundleShortVersionString: 0.2.1
+        CFBundleVersion: "13"
         NSExtension:
           NSExtensionPointIdentifier: com.apple.widgetkit-extension
     settings:

@@ -10,6 +10,7 @@ struct MetricSample: Identifiable {
 }
 @MainActor @Observable final class DashboardModel {
     static let demoID = UUID(uuidString: "00000000-0000-0000-0000-000000000001")!
+    var updates = UpdateManager()
     var profiles: [ServerProfile] = []
     var selectedProfile = DashboardModel.demoID { didSet { if oldValue != selectedProfile { if persistSelection { UserDefaults.standard.set(selectedProfile.uuidString, forKey: "pulse.lastProfile") }; switchProfile() } } }
     var selectedNode = "" { didSet { if oldValue != selectedNode && !isDemo && !changingProfile { restartPolling(clear: true) } } }
@@ -205,6 +206,10 @@ struct MetricSample: Identifiable {
                         self.history.append(.init(cpu: snapshot.node.cpu, ram: snapshot.node.memoryGB / max(1, snapshot.node.maxMemoryGB), disk: snapshot.node.storage.fraction))
                         self.history = Array(self.history.suffix(30))
                         if !self.incidentPresented { self.incidentReport = .live(storage: snapshot.node.storage, guests: snapshot.node.guests) }
+                        if self.topologyAddressDate == nil || Date().timeIntervalSince(self.topologyAddressDate!) > 45 {
+                            await self.refreshTopology()
+                            guard current == self.revision, !Task.isCancelled else { return }
+                        }
                         self.publishSnapshot()
                     } catch is CancellationError { return }
                     catch {
@@ -226,8 +231,14 @@ struct MetricSample: Identifiable {
     var widgetSnapshot: WidgetSnapshot {
         var snapshot = WidgetSnapshot(node: node, isDemo: isDemo)
         snapshot.profileID = selectedProfile; snapshot.profileName = profileName
+        snapshot.selectedMachineKey = WidgetMachineSelection.machine(profile: selectedProfile, data: UserDefaults.standard.data(forKey: PreferenceKey.widgetMachine))
         snapshot.state = isDemo ? .demo : connectionError != nil ? .error : !hasSnapshot ? .connecting : node.online ? .live : .offline
         snapshot.date = hasSnapshot ? lastUpdated : Date()
+        snapshot.guests = node.guests.map { guest in
+            var value = guest
+            value.ipAddresses = topologyGuestAddresses[MonitoringRules.guestKey(guest)] ?? guest.ipAddresses
+            return value
+        }
         return snapshot
     }
     func publishSnapshot(force: Bool = false) {
@@ -286,7 +297,7 @@ struct MetricSample: Identifiable {
         pendingDestroy = nil; inspectedGuest = nil
         publishSnapshot(force: true); refresh()
     }
-    func refreshTopology(sshMetrics: Bool = true) async {
+    func refreshTopology() async {
         guard !loadingTopology else { return }
         if isDemo {
             networkInterfaces = [.init(iface: "vmbr0", type: "bridge", active: 1), .init(iface: "vmbr1", type: "bridge", active: 1), .init(iface: "awg0", type: "tunnel", active: 1)]
@@ -324,27 +335,20 @@ struct MetricSample: Identifiable {
             for (key, values, error) in addresses { topologyGuestAddresses[key] = values; topologyAddressErrors[key] = error }
             topologyAddressDate = .now
         }
-        if sshMetrics, let profile = profiles.first(where: { $0.id == selectedProfile }) {
-            probingTunnels = true
-            let host = (try? await service.sshHost(node: node.id)) ?? profile.endpoint.host ?? node.id
-            guard current == revision, !Task.isCancelled else { return }
-            let user = UserDefaults.standard.string(forKey: PreferenceKey.sshUser) ?? "root"
-            do {
-                let runtime = try await TunnelProbe.discover(host: host, user: user)
-                guard current == revision, !Task.isCancelled else { return }
-                var interfaces = Dictionary(uniqueKeysWithValues: configuredInterfaces.map { ($0.iface, $0) })
-                for interface in runtime.interfaces { interfaces[interface.iface] = interface }
-                networkInterfaces = interfaces.values.sorted { $0.iface < $1.iface }
-                tunnelMeasurements = runtime.measurements; tunnelErrors = runtime.errors; topologyProbeError = nil
-            } catch {
-                if current == revision {
-                    let previousTunnels = networkInterfaces.filter { previous in previous.isTunnel && !configuredInterfaces.contains(where: { $0.iface == previous.iface }) }
-                    networkInterfaces = configuredInterfaces + previousTunnels.map { interface in var stale = interface; stale.active = 0; return stale }
-                    tunnelMeasurements = [:]; topologyProbeError = error.localizedDescription
-                }
+        networkInterfaces = configuredInterfaces
+        tunnelMeasurements = [:]; topologyProbeError = nil
+        if let tunnel = profiles.first(where: { $0.id == selectedProfile })?.externalTunnel, tunnel.isValid {
+            // Configured external nodes remain in the graph even if ICMP is filtered.
+            if !networkInterfaces.contains(where: { $0.iface == tunnel.interface }) {
+                networkInterfaces.append(.init(iface: tunnel.interface, type: "tunnel", active: 1))
             }
-        } else { networkInterfaces = configuredInterfaces; tunnelMeasurements = [:]; topologyProbeError = nil }
+            let measurement = await TunnelProbe.ping(tunnel)
+            guard current == revision, !Task.isCancelled else { return }
+            tunnelMeasurements[tunnel.interface] = measurement
+        }
+        topologyError = nil
     }
+
     func showIncidents() {
         incidentPresented = true
         if isDemo { incidentReport = .demo; return }

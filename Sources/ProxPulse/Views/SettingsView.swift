@@ -13,10 +13,11 @@ struct SettingsView: View {
     @AppStorage(PreferenceKey.diskAlerts) private var diskAlerts = true
     @AppStorage(PreferenceKey.nodeAlerts) private var nodeAlerts = true
     @AppStorage(PreferenceKey.notificationSound) private var sound = true
+    @AppStorage(PreferenceKey.widgetMachine) private var widgetMachine = Data()
     @AppStorage(PreferenceKey.sshUser) private var sshUser = "root"
     private let notifications = NotificationService.shared
     init(model: DashboardModel, embedded: Bool = false) { self.model = model; self.embedded = embedded }
-    var body: some View {
+    private var content: some View {
         Group {
             if embedded { sections }
             else { ScrollView { sections.padding(24) }.frame(width: 760, height: 790) }
@@ -24,6 +25,10 @@ struct SettingsView: View {
         .sheet(isPresented: Binding(get: { !embedded && model.showAddServer }, set: { if !$0 { model.showAddServer = false } })) { AddServerSheet(model: model) }
         .sheet(item: Binding(get: { embedded ? nil : model.editingProfile }, set: { if !embedded { model.editingProfile = $0 } })) { profile in AddServerSheet(model: model, existing: profile) }
         .task { await notifications.refreshStatus() }
+    }
+    var body: some View {
+        content
+        .onChange(of: widgetMachine) { model.publishSnapshot(force: true) }
         .onChange(of: interval) { model.preferencesChanged(restart: true) }
         .onChange(of: language) { model.preferencesChanged() }
         .onChange(of: accent) { model.preferencesChanged() }
@@ -34,6 +39,7 @@ struct SettingsView: View {
     }
     private var sections: some View {
         VStack(alignment: .leading, spacing: 20) {
+            section("Обновления", icon: "arrow.down.circle", subtitle: "Новые версии ProxPulse с GitHub") { UpdateSectionView(manager: model.updates) }
             section("Подключение к Proxmox", icon: "server.rack", subtitle: "Профили и безопасный доступ") {
                 if model.profiles.isEmpty { T("Нет сохранённых серверов").foregroundStyle(.secondary) }
                 ForEach(model.profiles) { profile in
@@ -97,9 +103,19 @@ struct SettingsView: View {
             section("Виджеты", icon: "rectangle.3.group", subtitle: "Кластер на вашем рабочем столе") {
                 T("Нажмите правой кнопкой на рабочем столе → Изменить виджеты → найдите ProxPulse. Выберите малый, средний или большой виджет.").foregroundStyle(.secondary)
                 T("Виджеты читают общий кеш. Время обновления определяет macOS; приложение должно быть запущено для получения свежих данных.").font(.caption).foregroundStyle(.secondary)
+                setting("Машина для виджета") {
+                    Picker("", selection: machineSelection) {
+                        T("Выберите машину").tag("")
+                        ForEach(model.node.guests) { guest in Text("\(guest.name) · \(guest.kind.rawValue.uppercased()) \(guest.id)").tag(MonitoringRules.guestKey(guest)) }
+                    }.labelsHidden().frame(maxWidth: 300)
+                }
                 if let error = model.widgetError { T(error).font(.caption).foregroundStyle(.orange) }
             }
         }.toggleStyle(.switch).controlSize(.small).font(.system(size: 12)).frame(maxWidth: .infinity, alignment: .leading)
+    }
+    private var machineSelection: Binding<String> {
+        Binding(get: { WidgetMachineSelection.machine(profile: model.selectedProfile, data: widgetMachine) ?? "" },
+                set: { widgetMachine = WidgetMachineSelection.setting($0, profile: model.selectedProfile, data: widgetMachine) })
     }
     private func setting<Content: View>(_ title: String, @ViewBuilder content: () -> Content) -> some View {
         HStack { T(title); Spacer(); content() }

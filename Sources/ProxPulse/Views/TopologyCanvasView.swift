@@ -90,7 +90,6 @@ struct TopologyCanvasView: View {
     @Environment(\.pulseAccent) private var accent
     @Environment(\.pulseLanguage) private var language
     @Environment(\.topologyViewportHeight) private var viewportHeight
-    @AppStorage("pulse.topologyVPNProbe") private var sshMetrics = true
     @AppStorage("pulse.topologyLineSpeeds") private var showSpeeds = true
     @State private var zoom: CGFloat = 1
     @AppStorage("pulse.topologyLayout.v1") private var layoutData = Data()
@@ -130,7 +129,7 @@ struct TopologyCanvasView: View {
     }
     private func tunnelPoint(_ index: Int) -> CGPoint { position(tunnelID(tunnels[index].iface), fallback: CGPoint(x: 440 + CGFloat(index) * 310, y: height - 65)) }
     private func measurement(_ iface: String) -> TunnelMeasurement? {
-        guard model.isDemo || sshMetrics, let value = model.tunnelMeasurements[iface], Date().timeIntervalSince(value.measuredAt) <= 45 else { return nil }
+        guard let value = model.tunnelMeasurements[iface], Date().timeIntervalSince(value.measuredAt) <= 45 else { return nil }
         return value
     }
     private func sum(_ members: [Guest], receive: Bool) -> Double? {
@@ -152,15 +151,13 @@ struct TopologyCanvasView: View {
         }
         for (index, tunnel) in tunnels.enumerated() {
             let metrics = measurement(tunnel.iface), point = tunnelPoint(index)
-            result.append(.init(id: "tunnel/" + tunnel.iface, start: CGPoint(x: hostPoint.x + 50, y: hostPoint.y + 80), end: CGPoint(x: point.x, y: point.y - 52), receive: metrics?.receiveBps, transmit: metrics?.transmitBps, tunnel: true, active: tunnel.active != 0, receiveTowardEnd: false))
+            result.append(.init(id: "tunnel/" + tunnel.iface, start: CGPoint(x: hostPoint.x + 50, y: hostPoint.y + 80), end: CGPoint(x: point.x, y: point.y - 52), receive: metrics?.ratesAvailable == false ? nil : metrics?.receiveBps, transmit: metrics?.ratesAvailable == false ? nil : metrics?.transmitBps, tunnel: true, active: tunnel.active != 0, receiveTowardEnd: false))
         }
         return result
     }
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
             controls
-            if let error = model.topologyError { Text(error).font(.caption).foregroundStyle(.orange) }
-            if let error = model.topologyProbeError { T(error).font(.caption).foregroundStyle(.orange) }
             GeometryReader { viewport in
                 scene(viewport: viewport.size, origin: viewport.frame(in: .global).origin)
                     .environment(\.colorScheme, .dark)
@@ -181,23 +178,21 @@ struct TopologyCanvasView: View {
                         }.buttonStyle(.plain).padding(10).background(.ultraThinMaterial, in: Capsule()).padding(12)
                     }
             }.frame(maxWidth: .infinity, maxHeight: .infinity)
-            T("Мосты: живые счётчики SSH или сумма машин. Трафик машины суммарный по NIC. RTT — от ноды до VPN endpoint.").font(.system(size: 10)).foregroundStyle(.secondary)
+            T("Мосты: сумма трафика машин. VPN: ping с этого Mac. Скорость туннеля недоступна без счётчиков.").font(.system(size: 10)).foregroundStyle(.secondary)
         }.frame(height: max(390, viewportHeight))
-        .task(id: model.selectedProfile.uuidString + "/" + model.node.id + "/" + String(sshMetrics)) {
+        .task(id: model.selectedProfile.uuidString + "/" + model.node.id) {
             while !Task.isCancelled {
-                await model.refreshTopology(sshMetrics: sshMetrics)
+                await model.refreshTopology()
                 do { try await Task.sleep(for: .seconds(10)) } catch { break }
             }
         }
     }
     private var controls: some View {
         HStack(spacing: 18) {
-            Toggle(isOn: $sshMetrics) { Text("VPN / SSH").font(.caption) }.toggleStyle(.switch).controlSize(.small)
-                .localizedHelp("Точные счётчики туннеля и endpoint RTT через SSH-ключ ноды.")
             Toggle(isOn: $showSpeeds) { T("Скорость на линиях").font(.caption) }.toggleStyle(.switch).controlSize(.small)
             if model.loadingTopology { ProgressView().controlSize(.small) }
             Spacer()
-            Button { Task { await model.refreshTopology(sshMetrics: sshMetrics) } } label: { Image(systemName: "arrow.clockwise") }.buttonStyle(.borderless)
+            Button { Task { await model.refreshTopology() } } label: { Image(systemName: "arrow.clockwise") }.buttonStyle(.borderless)
         }
     }
     private struct NodeFrame {
@@ -355,12 +350,12 @@ struct TopologyCanvasView: View {
         return VStack(alignment: .leading, spacing: 8) {
             HStack {
                 Image(systemName: "network.badge.shield.half.filled").foregroundStyle(.purple)
-                Text(tunnel.iface.hasPrefix("awg") ? "AmneziaWG / VPS" : "VPN / VPS").fontWeight(.semibold)
-                Spacer(); StatusDot(online: tunnel.active != 0)
+                Text(model.profiles.first(where: { $0.id == model.selectedProfile })?.externalTunnel?.name ?? (tunnel.iface.hasPrefix("awg") ? "AmneziaWG / VPS" : "VPN / VPS")).fontWeight(.semibold)
+                Spacer(); StatusDot(online: measured?.reachable ?? (tunnel.active != 0))
             }.font(.system(size: 12))
             HStack { Text(tunnel.iface); Spacer(); Text(measured?.pingMS.map { String(format: "%.1f ms", $0) } ?? "— ms") }.font(.system(size: 10, design: .monospaced))
             Text(measured?.peer ?? "Endpoint —").font(.system(size: 11, design: .monospaced)).foregroundStyle(.purple)
-            Text("↓ \(TelemetryFormat.rate(measured?.receiveBps))  ↑ \(TelemetryFormat.rate(measured?.transmitBps))").font(.system(size: 10, design: .monospaced)).foregroundStyle(.secondary)
+            Text("↓ \(TelemetryFormat.rate(measured?.ratesAvailable == false ? nil : measured?.receiveBps))  ↑ \(TelemetryFormat.rate(measured?.ratesAvailable == false ? nil : measured?.transmitBps))").font(.system(size: 10, design: .monospaced)).foregroundStyle(.secondary)
         }.padding(14).frame(width: 270).background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 14))
             .overlay(RoundedRectangle(cornerRadius: 14).stroke(.purple.opacity(0.3)))
     }

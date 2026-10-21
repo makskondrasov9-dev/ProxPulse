@@ -26,6 +26,7 @@ import ProxPulseCore
         precondition(decoded.running == 5 && decoded.node == "pve-01" && decoded.cpu == 0.34)
         try verifySprint5()
         verifySprint51()
+        try verifySprint6()
         try verifySprint4()
         try verifySprint3()
         try await verifyAPIFixtures()

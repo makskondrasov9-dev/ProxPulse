@@ -1,5 +1,25 @@
 # Changelog
 
+## v0.2.1 — 2026-10-21
+
+### Русский
+
+- Сервис обновлений GitHub Releases: сравнение версий, release notes, проверка SHA-256 и установка с перезапуском; переключатель проверки при запуске. Логика проверки изучена в MacPulse в режиме чтения.
+- VPN без SSH: внешний туннель задаётся в профиле, ping выполняется с Mac. Убраны автоматические SSH-запуски, known_hosts и Python на ноде, а также предупреждение пробника на карте. Недоступные скорости не подменяются нулями.
+- Атомарный `live_snapshot.json` в Application Support, fallback для виджетов при недоступном App Group, выбор более свежего снимка и точечный файловый sandbox entitlement.
+- Новый средний Container / VM виджет: состояние, vCPU, RAM, IP, uptime; выбор машины в настройках с привязкой к профилю.
+- Установщик одной командой с SHA-256, проверкой бандла, снятием карантина только с приложения, регистрацией виджета и запуском. Homebrew cask и RU/EN инструкции.
+
+### English
+
+- GitHub Releases updater: version comparison, release notes, SHA-256 validation, installation/relaunch and optional startup checks; the reference updater in MacPulse was studied read-only.
+- SSH-free VPN: profile-defined external tunnel and Mac-side ping. Removed automatic SSH processes, known_hosts/Python requirements and the probe warning on the map. Unavailable rates are not fabricated.
+- Atomic Application Support `live_snapshot.json`, widget fallback when App Group access fails, freshest-snapshot selection and a narrow sandbox file entitlement.
+- New medium Container / VM widget with status, vCPU, RAM, IP and uptime; profile-scoped machine selection in Settings.
+- One-command installer with SHA-256, bundle validation, app-only quarantine removal, widget registration and launch. Homebrew cask and RU/EN instructions.
+
+The sandbox fallback is verified locally with a signed ad-hoc process without App Group entitlement and a negative control without file access. Compatibility with every other Mac is not claimed; macOS controls WidgetKit refresh scheduling. Downloads remain ad-hoc signed, without Apple notarization.
+
 ## v0.2.0 — 2026-10-20
 
 ### Русский

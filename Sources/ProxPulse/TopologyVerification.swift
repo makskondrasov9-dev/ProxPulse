@@ -37,16 +37,16 @@ final class TopologyFrameProbe: @unchecked Sendable {
             guard model.hasSnapshot else { throw ProvisionError.invalid("Live telemetry timed out") }
             try await Task.sleep(for: .seconds(5))
         }
-        await model.refreshTopology(sshMetrics: true)
+        await model.refreshTopology()
         if live {
             guard let tunnel = model.networkInterfaces.first(where: { $0.isTunnel && $0.active == 1 }),
                   let metrics = model.tunnelMeasurements[tunnel.iface], metrics.peer?.isEmpty == false else {
                 throw ProvisionError.invalid(model.topologyProbeError ?? "Runtime tunnel endpoint missing")
             }
-            print("LIVE: runtime \(tunnel.iface) endpoint=\(metrics.peer ?? "—"); RTT=\(metrics.pingMS.map(String.init(describing:)) ?? "unavailable") ms; RX=\(metrics.receiveBps); TX=\(metrics.transmitBps); guest IPs=\(model.topologyGuestAddresses.values.filter { !$0.isEmpty }.count)")
+            print("LIVE: configured \(tunnel.iface) endpoint=\(metrics.peer ?? "—"); RTT=\(metrics.pingMS.map(String.init(describing:)) ?? "unavailable") ms; tunnel rates=unavailable; guest IPs=\(model.topologyGuestAddresses.values.filter { !$0.isEmpty }.count)")
         }
         if live {
-            let refresh = Task { await model.refreshTopology(sshMetrics: true) }
+            let refresh = Task { await model.refreshTopology() }
             let runtimeNames = Set(model.networkInterfaces.filter(\.isTunnel).map(\.iface))
             for _ in 0..<25 {
                 precondition(runtimeNames.isSubset(of: Set(model.networkInterfaces.map(\.iface))), "Runtime tunnel vanished during API refresh")
@@ -56,7 +56,7 @@ final class TopologyFrameProbe: @unchecked Sendable {
             if let guest = model.node.guests.first(where: \.running) {
                 print("PRIMARY GUEST IP: " + (model.topologyGuestAddresses[MonitoringRules.guestKey(guest)]?.first ?? "unavailable"))
             }
-            print("PASS: runtime tunnel remains visible throughout API + SSH refresh")
+            print("PASS: runtime tunnel remains visible throughout API + Mac ping refresh")
         }
         let suite = "dev.proxpulse.topology-verification." + UUID().uuidString
         let defaults = UserDefaults(suiteName: suite)!

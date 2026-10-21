@@ -9,6 +9,13 @@ import WidgetKit
     @State private var model = DashboardModel()
     init() {
         #if DEBUG
+        if CommandLine.arguments.contains("--verify-sprint6") {
+            Task { @MainActor in
+                do { try await Sprint6Verification.run(); exit(0) }
+                catch { print("SPRINT 6: \(error.localizedDescription)"); exit(1) }
+            }
+            RunLoop.main.run()
+        }
         if CommandLine.arguments.contains("--release-media") {
             Task { @MainActor in
                 do { try await ReleaseMediaVerification.run(); exit(0) }
@@ -231,7 +238,7 @@ import WidgetKit
     }
     var body: some Scene {
         Window("ProxPulse", id: "dashboard") {
-            DashboardView(model: model).pulseAppearance().task { delegate.model = model; model.start(); model.publishSnapshot(); if CommandLine.arguments.contains("--add-server") { model.showAddServer = true } }
+            DashboardView(model: model).pulseAppearance().task { delegate.model = model; model.start(); model.publishSnapshot(); await model.updates.atLaunch(); if CommandLine.arguments.contains("--add-server") { model.showAddServer = true } }
             .onOpenURL { url in if url.scheme == "proxpulse" { openWindow(id: "dashboard"); NSApp.activate(ignoringOtherApps: true) } }
         }.defaultSize(width: 1280, height: 900)
         .windowStyle(.hiddenTitleBar)

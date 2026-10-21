@@ -15,6 +15,10 @@ struct AddServerSheet: View {
             _user = State(initialValue: parts.first ?? "root@pam")
             _tokenName = State(initialValue: parts.count > 1 ? parts[1] : "proxpulse")
             _profileID = State(initialValue: existing.id)
+            _vpnEnabled = State(initialValue: existing.externalTunnel != nil)
+            _vpnName = State(initialValue: existing.externalTunnel?.name ?? "AmneziaWG")
+            _vpnAddress = State(initialValue: existing.externalTunnel?.address ?? "")
+            _vpnInterface = State(initialValue: existing.externalTunnel?.interface ?? "awg0")
         }
     }
     private var preservesSecret: Bool { secret.isEmpty && existing?.authMode == auth }
@@ -30,13 +34,19 @@ struct AddServerSheet: View {
     @State private var tokenName = "proxpulse"
     @State private var secret = ""
     @State private var insecure = true
+    @State private var vpnEnabled = false
+    @State private var vpnName = "AmneziaWG"
+    @State private var vpnAddress = ""
+    @State private var vpnInterface = "awg0"
+    private var externalTunnel: ExternalTunnel { .init(name: vpnName, address: vpnAddress.trimmingCharacters(in: .whitespacesAndNewlines), interface: vpnInterface) }
     @State private var testing = false
     @State private var check: ConnectionCheck?
     @State private var failure: String?
     @State private var task: Task<Void, Never>?
     @State private var profileID = UUID()
-    private var fingerprint: String { [name, address, auth.rawValue, user, tokenName, secret, String(insecure)].joined(separator: "\u{1F}") }
+    private var fingerprint: String { [name, address, auth.rawValue, user, tokenName, secret, String(insecure), String(vpnEnabled), vpnName, vpnAddress, vpnInterface].joined(separator: "\u{1F}") }
     private var validationMessage: String? {
+        if vpnEnabled && !externalTunnel.isValid { return "Укажите корректные имя, IP и интерфейс VPN." }
         if name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty { return "Укажите имя кластера." }
         if (try? ProfileValidation.endpoint(address)) == nil { return "Укажите HTTPS URL или IP сервера, например 192.168.1.228:8006." }
         if ProfileValidation.username(user, mode: auth) == nil { return auth == .password ? "Введите логин, например root или root@pam." : "Введите пользователя с realm, например monitor@pve." }
@@ -49,10 +59,12 @@ struct AddServerSheet: View {
     private var valid: Bool { validationMessage == nil }
     private func profile() throws -> ServerProfile {
         guard valid else { throw ProxmoxError.invalidResponse }
-        return ServerProfile(id: profileID, name: name.trimmingCharacters(in: .whitespacesAndNewlines), endpoint: try ProfileValidation.endpoint(address), tokenID: auth == .apiToken ? ProfileValidation.username(user, mode: auth)! + "!" + tokenName : ProfileValidation.username(user, mode: auth)!, allowInsecureSSL: insecure, authentication: auth)
+        var value = ServerProfile(id: profileID, name: name.trimmingCharacters(in: .whitespacesAndNewlines), endpoint: try ProfileValidation.endpoint(address), tokenID: auth == .apiToken ? ProfileValidation.username(user, mode: auth)! + "!" + tokenName : ProfileValidation.username(user, mode: auth)!, allowInsecureSSL: insecure, authentication: auth)
+        value.externalTunnel = vpnEnabled ? externalTunnel : nil
+        return value
     }
     var body: some View {
-        VStack(alignment: .leading, spacing: 22) {
+        VStack(alignment: .leading, spacing: 18) {
             HStack(spacing: 14) {
                 Image(systemName: "server.rack").font(.system(size: 24)).foregroundStyle(accent.uiColor).frame(width: 52, height: 52).background(accent.uiColor.opacity(0.13), in: RoundedRectangle(cornerRadius: 15))
                 VStack(alignment: .leading, spacing: 5) {
@@ -60,7 +72,7 @@ struct AddServerSheet: View {
                     T("Ваш Proxmox. Напрямую с этого Mac.").foregroundStyle(.secondary).font(.system(size: 12))
                 }
             }
-            VStack(alignment: .leading, spacing: 16) {
+            ScrollView { VStack(alignment: .leading, spacing: 16) {
                 field("ИМЯ КЛАСТЕРА") { LTextField("Homelab", text: $name) }
                 field("URL / IP СЕРВЕРА") { LTextField("https://proxmox.local:8006", text: $address).onChange(of: address) { insecure = ProfileValidation.isLocal(address) } }
                 Picker(L10n.text("Авторизация", language: language), selection: $auth) { T("API Token").tag(AuthenticationMode.apiToken); T("Логин и пароль").tag(AuthenticationMode.password) }.pickerStyle(.segmented)
@@ -81,7 +93,18 @@ struct AddServerSheet: View {
                         T("Для локального сервера. Проверка сертификата этого подключения будет отключена.").font(.system(size: 10)).foregroundStyle(.secondary)
                     }
                 }.toggleStyle(.switch).controlSize(.small)
-            }.disabled(testing).padding(20).background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 18))
+            }.disabled(testing).padding(20).background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 18)) }.frame(maxHeight: vpnEnabled ? 340 : 460)
+            VStack(alignment: .leading, spacing: 12) {
+                Toggle(isOn: $vpnEnabled) { T("Внешний туннель (VPN)") }.toggleStyle(.switch)
+                if vpnEnabled {
+                    HStack {
+                        field("Имя VPN") { LTextField("AmneziaWG", text: $vpnName) }
+                        field("IP адрес VPS") { LTextField("203.0.113.10", text: $vpnAddress) }
+                        field("Интерфейс") { LTextField("awg0", text: $vpnInterface) }.frame(width: 90)
+                    }
+                    T("Ping с этого Mac. SSH-ключи и Python не нужны.").font(.caption).foregroundStyle(.secondary)
+                }
+            }.padding(14).background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 14)).disabled(testing)
             if existing != nil { T("Оставьте секрет пустым, чтобы сохранить текущий в Keychain.").font(.caption).foregroundStyle(.secondary) }
             HStack(spacing: 10) {
                 if testing { ProgressView().controlSize(.small); T("Проверяем доступ и права API…").foregroundStyle(.secondary) }
@@ -97,7 +120,7 @@ struct AddServerSheet: View {
                     .buttonStyle(.borderedProminent).disabled(!valid || testing).keyboardShortcut(.defaultAction)
 
             }
-        }.padding(30).frame(width: 580)
+        }.padding(26).frame(width: 640)
         .onChange(of: fingerprint) { task?.cancel(); testing = false; check = nil; failure = nil }
         .onDisappear { task?.cancel() }
     }

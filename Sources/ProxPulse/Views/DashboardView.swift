@@ -60,6 +60,7 @@ struct DashboardView: View {
         .sheet(isPresented: Binding(get: { model.creationKind != nil }, set: { if !$0 { model.creationKind = nil } })) {
             if let kind = model.creationKind { CreateGuestSheet(model: model, kind: kind).pulseAppearance() }
         }
+        .sheet(isPresented: $model.updates.showRelease) { UpdateSheet(manager: model.updates) }
         .sheet(item: $model.inspectedGuest) { guest in GuestInspectorSheet(model: model, original: guest) }
         .sheet(item: $model.editingProfile) { profile in AddServerSheet(model: model, existing: profile) }
         .sheet(item: $model.diagnosticGuest) { guest in guestDiagnostics(guest) }
@@ -107,7 +108,7 @@ struct DashboardView: View {
                 HStack { Image(systemName: "sparkles").foregroundStyle(accent.uiColor); T("Место для вашего кластера").font(.system(size: 11, weight: .medium)) }
                 T("Все системы.\nОдин спокойный взгляд.").font(.system(size: 11)).foregroundStyle(.secondary).lineSpacing(4)
             }.padding(13).frame(maxWidth: .infinity, alignment: .leading).background(.primary.opacity(0.025), in: RoundedRectangle(cornerRadius: 12))
-            HStack { Image(systemName: "circle.dotted"); T("ProxPulse"); Spacer(); T(Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "0.2.0") }.font(.system(size: 10)).foregroundStyle(.tertiary)
+            HStack { Image(systemName: "circle.dotted"); T("ProxPulse"); Spacer(); T(Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "0.2.1") }.font(.system(size: 10)).foregroundStyle(.tertiary)
         }.padding(.horizontal, 19).padding(.bottom, 20)
         .background(.ultraThinMaterial)
     }

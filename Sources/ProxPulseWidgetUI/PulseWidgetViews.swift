@@ -147,3 +147,31 @@ public struct PulseWidgetView: View {
         .accessibilityLabel("CPU \(Int(snapshot.cpu * 100))%, RAM \(Int(snapshot.memory * 100))%, Disk \(Int((snapshot.disk ?? 0) * 100))%")
     }
 }
+
+public struct MachineWidgetView: View {
+    public let entry: PulseEntry
+    public init(entry: PulseEntry) { self.entry = entry }
+    private var language: String { entry.snapshot?.language ?? "ru" }
+    private func text(_ value: String) -> String { L10n.text(value, language: language) }
+    public var body: some View {
+        VStack(alignment: .leading, spacing: 9) {
+            if let snapshot = entry.snapshot,
+               let key = snapshot.selectedMachineKey,
+               let machine = snapshot.guests?.first(where: { MonitoringRules.guestKey($0) == key }) {
+                HStack { Circle().fill(machine.running ? .green : .gray).frame(width: 7, height: 7); Text(machine.name).font(.headline).lineLimit(1); Spacer(); if snapshot.isDemo { Text("DEMO").font(.system(size: 8, weight: .bold)) } }
+                HStack { Text("\(machine.kind == .lxc ? "CT" : "VM") \(machine.id)"); Spacer(); Text(machine.running ? "Online" : "Offline") }.font(.caption).foregroundStyle(.secondary)
+                HStack { Text("CPU \(Int(machine.cpu*100))% · \(machine.cpuCount.map(String.init) ?? "—") vCPU"); Spacer() }.font(.system(size: 11, weight: .medium))
+                Text("RAM \(TelemetryFormat.number(machine.memoryGB, language: language)) / \(TelemetryFormat.number(machine.maxMemoryGB, language: language)) GB").font(.system(size: 11))
+                ProgressView(value: min(1, machine.memoryGB / max(0.001, machine.maxMemoryGB))).tint(.purple)
+                HStack { Text(machine.ipAddresses?.first ?? "IP —").lineLimit(1); Spacer(); Text(TelemetryFormat.uptime(machine.uptimeSeconds)) }.font(.system(size: 10, design: .monospaced)).foregroundStyle(.secondary)
+                if snapshot.state == .error || entry.date.timeIntervalSince(snapshot.date) >= 300 { Text(text("Снимок устарел")).font(.caption2).foregroundStyle(.orange) }
+            } else {
+                Label(text("Машина"), systemImage: "shippingbox").font(.headline)
+                Text(text("Выберите машину в настройках ProxPulse → Виджеты.")).font(.caption).foregroundStyle(.secondary)
+            }
+        }.frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+            .containerBackground(.ultraThinMaterial, for: .widget)
+            .preferredColorScheme(entry.snapshot?.appearance == "dark" ? .dark : entry.snapshot?.appearance == "light" ? .light : nil)
+            .widgetURL(URL(string: "proxpulse://dashboard"))
+    }
+}

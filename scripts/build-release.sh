@@ -3,8 +3,8 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 source scripts/swift-environment.sh
-VERSION=0.2.0
-BUILD=12
+VERSION=0.2.1
+BUILD=13
 RELEASE="$PWD/.build/public-release"
 APP="$RELEASE/ProxPulse.app"
 mkdir -p "$RELEASE"
@@ -37,6 +37,7 @@ mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources" "$EXTENSION/Contents/Ma
 lipo -create "$RELEASE/ProxPulse-x86_64" "$RELEASE/ProxPulse-arm64" -output "$APP/Contents/MacOS/ProxPulse"
 lipo -create "$RELEASE/ProxPulseWidget-x86_64" "$RELEASE/ProxPulseWidget-arm64" -output "$EXTENSION/Contents/MacOS/ProxPulseWidget"
 cp Resources/AppIcon.icns "$APP/Contents/Resources/AppIcon.icns"
+cp scripts/install.sh "$APP/Contents/Resources/install.sh"
 cp Resources/AppIcon.icns "$EXTENSION/Contents/Resources/AppIcon.icns"
 python3 - "$APP" "$VERSION" "$BUILD" <<'PY'
 import pathlib,plistlib,sys

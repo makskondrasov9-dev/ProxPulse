@@ -1,4 +1,5 @@
 import Foundation
+import Darwin
 
 public struct NodeNetworkInterface: Decodable, Identifiable, Sendable {
     public var iface: String
@@ -8,7 +9,7 @@ public struct NodeNetworkInterface: Decodable, Identifiable, Sendable {
     public var gateway: String?
     public var id: String { iface }
     public var isBridge: Bool { type == "bridge" || type == "OVSBridge" || iface.hasPrefix("vmbr") }
-    public var isTunnel: Bool { ["awg", "wg", "tun"].contains { iface.hasPrefix($0) } }
+    public var isTunnel: Bool { type == "tunnel" || ["awg", "wg", "tun"].contains { iface.hasPrefix($0) } }
     public init(iface: String, type: String? = nil, active: Int? = nil, address: String? = nil, gateway: String? = nil) { self.iface = iface; self.type = type; self.active = active; self.address = address; self.gateway = gateway }
 }
 public struct GuestConfiguration: Decodable, Sendable {
@@ -34,8 +35,14 @@ public struct TunnelMeasurement: Decodable, Sendable {
     public var pingMS: Double?
     public var receiveBps: Double
     public var transmitBps: Double
+    public var reachable: Bool? = nil
+    public var ratesAvailable: Bool? = nil
     public var measuredAt: Date = .now
-    enum CodingKeys: String, CodingKey { case peer, pingMS, receiveBps, transmitBps }
+    public init(peer: String?, pingMS: Double?, reachable: Bool) {
+        self.peer = peer; self.pingMS = pingMS; self.reachable = reachable
+        receiveBps = 0; transmitBps = 0; ratesAvailable = false
+    }
+    enum CodingKeys: String, CodingKey { case peer, pingMS, receiveBps, transmitBps, reachable, ratesAvailable }
 }
 public enum TrafficAnimation {
     public static func frequency(bytesPerSecond: Double) -> Double { bytesPerSecond > 0 ? min(8, 0.7 + log10(max(1, bytesPerSecond)) * 0.7) : 0 }
@@ -60,5 +67,18 @@ public struct TrafficPhase: Sendable {
     public mutating func update(speed: Double, time: Double) {
         let phase = position(at: time)
         self.speed = speed; offset = phase - time * speed
+    }
+}
+
+public struct ExternalTunnel: Codable, Hashable, Sendable {
+    public var name: String
+    public var address: String
+    public var interface: String
+    public init(name: String, address: String, interface: String) { self.name = name; self.address = address; self.interface = interface }
+    public var isValid: Bool {
+        var v4 = in_addr(); var v6 = in6_addr()
+        return !name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty &&
+            (inet_pton(AF_INET, address, &v4) == 1 || inet_pton(AF_INET6, address, &v6) == 1) &&
+            !interface.isEmpty && interface.count <= 32 && interface.allSatisfy { $0.isASCII && ($0.isLetter || $0.isNumber || "_.-".contains($0)) }
     }
 }

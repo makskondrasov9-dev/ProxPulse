@@ -19,8 +19,8 @@ cat > "$APP/Contents/Info.plist" <<'PLIST'
 <key>CFBundleIconFile</key><string>AppIcon.icns</string>
 <key>CFBundleName</key><string>ProxPulse</string>
 <key>CFBundlePackageType</key><string>APPL</string>
-<key>CFBundleShortVersionString</key><string>0.2.0</string>
-<key>CFBundleVersion</key><string>12</string>
+<key>CFBundleShortVersionString</key><string>0.2.1</string>
+<key>CFBundleVersion</key><string>13</string>
 <key>CFBundleInfoDictionaryVersion</key><string>6.0</string>
 <key>CFBundleSupportedPlatforms</key><array><string>MacOSX</string></array>
 <key>LSMinimumSystemVersion</key><string>14.0</string>
@@ -37,9 +37,10 @@ if [[ -f .build/ProxPulseWidget ]]; then
     python3 - "$EXTENSION/Contents/Info.plist" <<'PYINFO'
 import plistlib,sys
 with open(sys.argv[1],'wb') as f:
- plistlib.dump({'CFBundleIconFile':'AppIcon.icns','CFBundleExecutable':'ProxPulseWidget','CFBundleIdentifier':'dev.proxpulse.app.widget','CFBundleName':'ProxPulse','CFBundleDisplayName':'ProxPulse','CFBundlePackageType':'XPC!','CFBundleShortVersionString':'0.2.0','CFBundleVersion':'12','LSMinimumSystemVersion':'14.0','CFBundleInfoDictionaryVersion':'6.0','CFBundleSupportedPlatforms':['MacOSX'],'NSExtension':{'NSExtensionPointIdentifier':'com.apple.widgetkit-extension'}},f)
+ plistlib.dump({'CFBundleIconFile':'AppIcon.icns','CFBundleExecutable':'ProxPulseWidget','CFBundleIdentifier':'dev.proxpulse.app.widget','CFBundleName':'ProxPulse','CFBundleDisplayName':'ProxPulse','CFBundlePackageType':'XPC!','CFBundleShortVersionString':'0.2.1','CFBundleVersion':'13','LSMinimumSystemVersion':'14.0','CFBundleInfoDictionaryVersion':'6.0','CFBundleSupportedPlatforms':['MacOSX'],'NSExtension':{'NSExtensionPointIdentifier':'com.apple.widgetkit-extension'}},f)
 PYINFO
     codesign --force --sign - --entitlements ProxPulse.entitlements "$EXTENSION"
 fi
+cp scripts/install.sh "$APP/Contents/Resources/install.sh"
 codesign --force --sign - --entitlements ProxPulse.local.entitlements "$APP"
 print "Built $APP (native app; local WidgetKit extension included when prebuilt)"
