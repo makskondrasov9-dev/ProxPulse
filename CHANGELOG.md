@@ -2,6 +2,8 @@
 
 ## v0.2.1 — 2026-10-21
 
+Build 14: macOS IPv4 and IPv6 ping invocations verified separately; the external process deadline bounds both.
+
 ### Русский
 
 - Сервис обновлений GitHub Releases: сравнение версий, release notes, проверка SHA-256 и установка с перезапуском; переключатель проверки при запуске. Логика проверки изучена в MacPulse в режиме чтения.

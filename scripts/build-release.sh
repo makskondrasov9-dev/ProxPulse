@@ -4,7 +4,7 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 source scripts/swift-environment.sh
 VERSION=0.2.1
-BUILD=13
+BUILD=14
 RELEASE="$PWD/.build/public-release"
 APP="$RELEASE/ProxPulse.app"
 mkdir -p "$RELEASE"

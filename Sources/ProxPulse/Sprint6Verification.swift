@@ -32,6 +32,9 @@ import ProxPulseWidgetUI
         RuntimeUIVerification.capture(SettingsView(model: model, embedded: true).pulseAppearance().defaultAppStorage(defaults).padding(24), size: .init(width: 1000, height: 1650), name: "sprint6-settings-en")
         let loopback = await TunnelProbe.ping(.init(name: "Loopback", address: "127.0.0.1", interface: "awg0"))
         precondition(loopback.reachable == true && loopback.pingMS != nil && loopback.ratesAvailable == false)
+        let ipv6 = await TunnelProbe.ping(.init(name: "IPv6 loopback", address: "::1", interface: "wg0"))
+        precondition(ipv6.reachable == true && ipv6.pingMS != nil && ipv6.ratesAvailable == false)
+        print("PASS: IPv4 and IPv6 system ping argument handling and deadlines")
         print("PASS: update modal, VPN profile, RU/EN settings, selected-machine widget native renders; local ping works without SSH and does not fabricate rates")
     }
 }

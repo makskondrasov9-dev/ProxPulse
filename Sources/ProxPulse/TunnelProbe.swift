@@ -8,7 +8,7 @@ enum TunnelProbe {
         return await Task.detached(priority: .utility) {
             let process = Process(), pipe = Pipe()
             process.executableURL = URL(fileURLWithPath: tunnel.address.contains(":") ? "/sbin/ping6" : "/sbin/ping")
-            process.arguments = ["-n", "-c", "1", "-W", "1000", tunnel.address]
+            process.arguments = ["-n", "-c", "1"] + (tunnel.address.contains(":") ? [] : ["-W", "1000"]) + [tunnel.address]
             process.standardOutput = pipe; process.standardError = FileHandle.nullDevice
             do {
                 try process.run()
