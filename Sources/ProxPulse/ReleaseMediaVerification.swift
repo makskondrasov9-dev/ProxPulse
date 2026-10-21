@@ -23,7 +23,7 @@ import ProxPulseCore
             window.contentView = nil; model.stop()
             model = DashboardModel(loadProfiles: false)
             model.workspaceMode = mode
-            model.selectedPage = mode == .grid ? "Обзор" : "Машины"
+            model.selectedPage = mode == .topology ? "Обзор" : "Машины"
             if mode == .topology { await model.refreshTopology() }
             let host = NSHostingView(rootView: DashboardView(model: model, animate: true).pulseAppearance().defaultAppStorage(defaults))
             window.setContentSize(.init(width: 1440, height: height)); window.contentView = host

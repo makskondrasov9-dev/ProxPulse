@@ -1,6 +1,6 @@
 cask "proxpulse" do
-  version "0.2.1"
-  sha256 "8d9f38858e082d57dc8da9c80b18d165f9202d1c195146439ebd90bdce300a87"
+  version "0.2.2"
+  sha256 "33c24ef68c73d20c2f960d782939a0d5b04458bfd544add90d1620b9269d2158"
 
   url "https://github.com/makskondrasov9-dev/ProxPulse/releases/download/v#{version}/ProxPulse-v#{version}.dmg"
   name "ProxPulse"

@@ -4,8 +4,8 @@
 <h1 align="center">ProxPulse</h1>
 <p align="center">Your Proxmox cluster. One calm glance.<br/>Ваш кластер Proxmox. Один спокойный взгляд.</p>
 <p align="center">
-  <a href="https://github.com/makskondrasov9-dev/ProxPulse/releases/tag/v0.2.1">Release v0.2.1</a> ·
-  <a href="https://github.com/makskondrasov9-dev/ProxPulse/releases/download/v0.2.1/ProxPulse-v0.2.1.dmg">Download DMG</a> ·
+  <a href="https://github.com/makskondrasov9-dev/ProxPulse/releases/tag/v0.2.2">Release v0.2.2</a> ·
+  <a href="https://github.com/makskondrasov9-dev/ProxPulse/releases/download/v0.2.2/ProxPulse-v0.2.2.dmg">Download DMG</a> ·
   macOS 14+ · Apple Silicon & Intel · Swift 6
 </p>
 
@@ -30,7 +30,7 @@ Retina screenshots of the actual app with **DEMO data**. Network addresses and w
     <td width="50%"><img src="docs/images/rack.png" alt="19-inch server rack — VM and LXC blades with status LEDs and CPU/RAM displays" /><br/><strong>19-inch Rack / Фронтальная стойка</strong></td>
   </tr>
   <tr>
-    <td><img src="docs/images/grid.png" alt="Grid overview — activity rings, machine cards and storage sunburst" /><br/><strong>Grid & Storage Radar / Сетка и дисковый радар</strong></td>
+    <td><img src="docs/images/grid.png" alt="Machine catalog — Grid cards, status filters and sorting" /><br/><strong>Machine Grid / Сетка машин</strong></td>
     <td><img src="docs/images/inspector.png" alt="Machine inspector — glass KPI tiles, amber SWAP indicator, actions and neon history charts" /><br/><strong>Machine Inspector / Инспектор машины</strong></td>
   </tr>
 </table>
@@ -41,19 +41,31 @@ Retina screenshots of the actual app with **DEMO data**. Network addresses and w
 
 **ProxPulse** — нативный клиент Proxmox VE для macOS на SwiftUI и WidgetKit. Мониторинг кластера, управление VM/LXC, телеметрия и диагностика собраны в одном интерфейсе. Секреты подключения хранятся в Apple Keychain.
 
-### Новое в v0.2.1
+### Новое в v0.2.2 · build 16
+
+- **Независимые AppIntent-виджеты машин.** Для каждого экземпляра: правый клик → **Изменить виджет → Машина**. Список заново читает кэш активного сервера, автоматически подхватывает новые CT/VM и показывает 🟢 Работает / ⚪️ Остановлен. При удалении выбранной машины появляется «Машина не найдена».
+- **Обзор с картой на всю доступную высоту.** Кольца ноды сверху, интерактивная топология под ними, диагностика снизу. Хранилища перенесены в собственный раздел; каталог машин содержит только **Сетку / Стойку**, сортировку RAM/CPU/VMID/имя и фильтры состояния.
+- **Навигация мышью.** Плавающие **+ / − / 100% / По размеру / В центр**, колесо мыши с зумом относительно курсора и жесты трекпада.
+- **Фильтры на карте:** **Все / Работают / Выключены**, с плавным исчезновением карточек и их связей.
+- **Стабильная расстановка.** Координаты узлов сохраняются относительно центра графа отдельно для профиля/ноды; прежняя расстановка мигрирует автоматически. Жёсткий барьер перетаскивания — 24 pt. При увеличении схему можно просматривать панорамированием; ограничение камеры предотвращает уход в пустоту. Кривые и бейджи следуют за узлами при зуме и ресайзе.
+- **Быстрый поиск ⌘K.** Кликабельная строка в шапке, поиск по имени, VMID и IP, быстрый инспектор, SSH и Start/Reboot; Esc или клик снаружи закрывает меню. Перезагрузка сохраняет подтверждение.
+- **Встроенная проверка обновлений.** Настройки → Обновления: changelog, проверка версии, SHA-256 и установка с перезапуском; проверка при запуске настраивается.
+
+После обновления старый статический виджет машины может потребовать удаления и повторного добавления: он не содержит AppIntent-конфигурации. Для каждого нового виджета выберите свою машину. Фактическое расписание обновления виджетов определяет macOS.
+
+### Возможности, добавленные в v0.2.1
 
 - **Обновления в приложении:** Настройки → Обновления, проверка GitHub Releases при запуске по выбору пользователя, описание изменений и «Скачать и обновить». DMG проверяется по SHA-256; общий установщик заменяет приложение и запускает его снова.
 - **VPN без SSH:** в профиле укажите имя внешнего туннеля, IP VPS и интерфейс. Доступность измеряется системным ping с Mac. Не нужны SSH-ключи, known_hosts или Python на Proxmox. Узел сохраняется на карте при недоступном ping; ICMP может блокироваться сетью. Скорость самого туннеля показывается прочерком, поскольку удалённые счётчики больше не запрашиваются. SSH остаётся только для вручную вызванной консоли; карта и виджеты от него не зависят.
 - **Независимый кеш виджетов:** приложение атомарно пишет `~/Library/Application Support/ProxPulse/live_snapshot.json` при каждом опросе. Виджет сначала проверяет App Group, затем файл; более новый файл имеет приоритет над устаревшим групповым кешем. Для ad-hoc расширения предусмотрен точечный read-only sandbox entitlement к этому файлу ([документация Apple](https://developer.apple.com/library/archive/documentation/Miscellaneous/Reference/EntitlementKeyReference/Chapters/AppSandboxTemporaryExceptionEntitlements.html)). На этом Mac проверены разрешённый доступ без App Group и контрольный отказ без entitlement; другие Mac/версии macOS не проверялись.
-- **Виджет Container / VM:** статус, vCPU, RAM, IP и uptime выбранной машины. Добавьте этот средний виджет в галерее и выберите машину в Настройках → Виджеты. Выбор привязан к активному профилю; адреса обновляются и при закрытой карте.
+- **Виджет Container / VM:** статус, vCPU, RAM, IP и uptime выбранной машины. Добавьте средний виджет машины в галерее и выберите машину через «Изменить виджет» для каждого экземпляра. Доступные машины относятся к активному профилю; адреса обновляются и при закрытой карте.
 - **Установка одной командой и Homebrew:** установщик использует только штатные инструменты macOS; Homebrew — дополнительный способ, а не зависимость.
 
 ### Возможности рабочего пространства
 
-- **Три режима отображения.** Переключайтесь между Сеткой, фронтальной Стойкой 19″ и Картой топологии. В стойке LXC занимает 1U, VM — 2U; статусные лампы, сетевые Tx/Rx-светодиоды и OLED-датчики CPU/RAM показывают состояние машин. Клик по машине в любом режиме открывает общий инспектор.
+- **Три режима отображения.** Обзор содержит постоянную карту топологии; вкладка «Машины» переключается между Сеткой и фронтальной Стойкой 19″. В стойке LXC занимает 1U, VM — 2U; статусные лампы, сетевые Tx/Rx-светодиоды и OLED-датчики CPU/RAM показывают состояние машин. Клик по машине в любом режиме открывает общий инспектор.
 - **Живая топология сети.** Карта связывает ноду, мосты `vmbr*`, машины и VPN. Интерфейсы `awg*`, `wg*`, `tun*`, доступные API, дополняются явно настроенным внешним VPN из профиля. Узел VPS показывает адрес и RTT от этого Mac; световые частицы движутся по направлениям RX/TX с учётом трафика.
-- **Интерактивный холст.** Перетаскивайте сервер, мост, VPS или любую машину. Расстановка сохраняется отдельно для профиля и ноды; **Auto-layout / Сбросить расстановку** возвращает авто-дерево, **В центр** подбирает масштаб и центр. Карточки и pan ограничены видимой областью с отступом 24 pt. Максимальный зум сохраняет все карточки внутри экрана.
+- **Интерактивный холст.** Перетаскивайте сервер, мост, VPS или любую машину. Расстановка сохраняется отдельно для профиля и ноды; **Auto-layout / Сбросить расстановку** возвращает авто-дерево, **В центр** подбирает масштаб и центр. Перетаскивание карточек ограничено видимой областью с отступом 24 pt. Увеличенную схему можно просматривать с помощью pan; кнопка «По размеру» снова показывает её целиком.
 - **Умные бейджи скорости.** Микро-капсулы вида `↓ 286 B/s  ↑ 91 B/s` используют бирюзовый RX и фиолетовый TX. Если оба направления ниже 10 B/s, бейдж скрывается. Его центр всегда совпадает с точкой `t = 0.5` кривой Безье и следует за перемещением узлов.
 - **Мастер создания VM и LXC.** Свободный VMID, шаблоны ОС, ISO, хранилища и мосты загружаются из Proxmox. Для LXC доступны unprivileged/nesting, пароль и SSH-ключи, rootfs, ядра, RAM/SWAP, DHCP/static, gateway, firewall и DNS. Для VM — ISO, QEMU Agent, шина/объём диска/discard, sockets/cores/CPU type, RAM/ballooning и модель сетевой карты. Поддерживаемые поля передаются в одноимённые параметры API; перед созданием можно проверить запрос. Машина создаётся выключенной.
 - **Пользовательские пресеты.** Сохраните конфигурацию мастера и заполните форму в один клик. Пресеты хранятся локально; пароль не включается в пресет.
@@ -82,7 +94,7 @@ open /Applications/ProxPulse.app
 
 Для ручной установки:
 
-1. Скачайте **[ProxPulse-v0.2.1.dmg](https://github.com/makskondrasov9-dev/ProxPulse/releases/download/v0.2.1/ProxPulse-v0.2.1.dmg)**. Рядом опубликована **[контрольная сумма SHA-256](https://github.com/makskondrasov9-dev/ProxPulse/releases/download/v0.2.1/ProxPulse-v0.2.1.dmg.sha256)**.
+1. Скачайте **[ProxPulse-v0.2.2.dmg](https://github.com/makskondrasov9-dev/ProxPulse/releases/download/v0.2.2/ProxPulse-v0.2.2.dmg)**. Рядом опубликована **[контрольная сумма SHA-256](https://github.com/makskondrasov9-dev/ProxPulse/releases/download/v0.2.2/ProxPulse-v0.2.2.dmg.sha256)**.
 2. Закройте старую версию. Откройте DMG и перетащите **ProxPulse.app → Applications**, подтвердив замену при обновлении.
 3. Запустите `/Applications/ProxPulse.app`. Выберите DEMO или добавьте сервер в WORKSPACE / Настройках. Поддерживаются API Token и логин/пароль; самоподписанный SSL настраивается для каждого профиля.
 4. Для виджетов: правый клик на рабочем столе → **Изменить виджеты** → **ProxPulse**. Сначала запустите приложение из Applications; держите его запущенным для свежих метрик.
@@ -110,19 +122,31 @@ xattr -cr /Applications/ProxPulse.app
 
 **ProxPulse** is a native Proxmox VE client for macOS, built with SwiftUI and WidgetKit. Monitor your cluster, manage VM/LXC workloads and inspect telemetry in one interface. Connection secrets stay in Apple Keychain.
 
-### New in v0.2.1
+### New in v0.2.2 · build 16
+
+- **Independent AppIntent machine widgets.** Right-click each widget → **Edit Widget → Machine**. Each instance has its own selection. The picker rereads the active server cache, includes newly created CT/VM workloads, and shows 🟢 Running / ⚪️ Stopped. Deleted selections display “Machine not found”.
+- **Full-height Overview topology.** Node activity rings above the map, diagnostics below. Storage has its own section; **Machines** contains only Grid/Rack, RAM/CPU/VMID/name sorting and status filters.
+- **Mouse navigation.** Floating **+ / − / 100% / Fit to window / Recenter** controls, cursor-anchored mouse-wheel zoom and trackpad gestures.
+- **Map filters:** **All / Running / Stopped**, with animated removal of matching nodes and links.
+- **Stable layout.** Profile/node-scoped coordinates are stored relative to the graph center; existing layouts migrate automatically. Node dragging has a hard 24 pt boundary. Zoomed content can be explored with pan; camera bounds prevent moving the graph into empty space. Curves and badges track nodes during zoom and resize.
+- **Quick Search ⌘K.** Click the header capsule or press ⌘K, search by name, VMID or IP, then open the inspector/SSH or Start/Reboot. Esc or an outside click dismisses it. Reboots retain confirmation.
+- **Built-in update checks.** Settings → Updates includes release notes, version comparison, SHA-256 verification and installation/relaunch, with optional startup checks.
+
+An existing static machine widget may need to be removed and added again after updating because it has no AppIntent configuration. Choose a machine separately for each new widget. macOS controls actual widget refresh scheduling.
+
+### Features introduced in v0.2.1
 
 - **In-app updates:** Settings → Updates, optional launch checks, GitHub release notes and Download and update. SHA-256 is verified before the shared installer replaces and relaunches the app.
 - **VPN without SSH:** configure a tunnel name, VPS IP and interface in the server profile. A local system ping measures reachability. No SSH keys, known_hosts or Python on Proxmox are required. The node stays on the map if ping is unavailable; ICMP may be filtered. Tunnel rates show a dash because remote counters are no longer queried. SSH remains available for manually opened consoles; the map and widgets do not depend on it.
 - **Independent widget cache:** every poll atomically writes `~/Library/Application Support/ProxPulse/live_snapshot.json`. Widgets check the App Group first, then this file; a newer file wins over stale group data. A narrow [read-only sandbox exception](https://developer.apple.com/library/archive/documentation/Miscellaneous/Reference/EntitlementKeyReference/Chapters/AppSandboxTemporaryExceptionEntitlements.html) grants the ad-hoc extension access to that exact file. A signed sandbox probe without App Group could read it on this Mac, while the negative control without the file entitlement could not. Other Macs/macOS versions have not been tested.
-- **Container / VM widget:** status, vCPU, RAM, IP and uptime for one selected machine. Add the medium machine widget in the gallery and choose a machine in Settings → Widgets. Selection is profile-scoped, and addresses refresh even when the map is closed.
+- **Container / VM widget:** status, vCPU, RAM, IP and uptime for one selected machine. Add the medium machine widget in the gallery and choose its machine through Edit Widget. Available machines belong to the active profile; addresses refresh even when the map is closed.
 - **One-command installation and Homebrew:** the installer needs only built-in macOS tools; Homebrew is an optional installation route.
 
 ### Workspace features
 
-- **Three workspace modes.** Switch between Grid, a front-facing 19″ Rack and Topology Map. Rack blades use 1U for LXC and 2U for VM, with status lamps, Tx/Rx LEDs and OLED-style CPU/RAM meters. Clicking a machine in any mode opens the shared inspector.
+- **Three workspace modes.** Overview contains the permanent Topology Map; Machines switches between Grid and the front-facing 19″ Rack. Rack blades use 1U for LXC and 2U for VM, with status lamps, Tx/Rx LEDs and OLED-style CPU/RAM meters. Clicking a machine in any mode opens the shared inspector.
 - **Live network topology.** Connect the node, `vmbr*` bridges, machines and VPN. API-visible `awg*`, `wg*` and `tun*` interfaces are supplemented by an explicitly configured external VPN in the profile. The VPS node shows its address and RTT from this Mac. Directional light particles follow RX/TX traffic.
-- **Interactive canvas.** Drag the server, bridges, VPS or machines. Positions persist per profile and node; **Auto-layout** restores the tree, while **Recenter** fits and centers it. A hard 24 pt boundary keeps complete cards and camera pan within the viewport. Maximum zoom also keeps all cards visible.
+- **Interactive canvas.** Drag the server, bridges, VPS or machines. Positions persist per profile and node; **Auto-layout** restores the tree, while **Recenter** fits and centers it. Node dragging has a hard 24 pt boundary. Zoomed content can be explored with pan; Fit to window shows the complete graph again.
 - **Smart speed badges.** Intrinsic-sized capsules such as `↓ 286 B/s  ↑ 91 B/s` use cyan RX and purple TX. A badge disappears when both directions are below 10 B/s. Its center follows the exact `t = 0.5` point of its cubic Bezier curve as nodes move.
 - **VM and LXC creation wizard.** Load a free VMID, OS templates, ISO images, storage and bridges from Proxmox. LXC supports unprivileged/nesting, password/SSH keys, rootfs, cores, RAM/SWAP, DHCP/static addressing, gateway, firewall and DNS. VM supports ISO, QEMU Agent, disk bus/size/discard, sockets/cores/CPU type, RAM/ballooning and NIC model. Supported fields map directly to Proxmox API parameters; review the request before creation. New machines remain stopped.
 - **User presets.** Save a wizard configuration locally and apply it in one click. Passwords are excluded from presets.
@@ -151,7 +175,7 @@ open /Applications/ProxPulse.app
 
 Manual DMG installation:
 
-1. Download **[ProxPulse-v0.2.1.dmg](https://github.com/makskondrasov9-dev/ProxPulse/releases/download/v0.2.1/ProxPulse-v0.2.1.dmg)** and its **[SHA-256 checksum](https://github.com/makskondrasov9-dev/ProxPulse/releases/download/v0.2.1/ProxPulse-v0.2.1.dmg.sha256)**.
+1. Download **[ProxPulse-v0.2.2.dmg](https://github.com/makskondrasov9-dev/ProxPulse/releases/download/v0.2.2/ProxPulse-v0.2.2.dmg)** and its **[SHA-256 checksum](https://github.com/makskondrasov9-dev/ProxPulse/releases/download/v0.2.2/ProxPulse-v0.2.2.dmg.sha256)**.
 2. Quit the previous version. Open the DMG and drag **ProxPulse.app → Applications**, replacing the app when upgrading.
 3. Launch `/Applications/ProxPulse.app`. Try DEMO or add a server in WORKSPACE / Settings. API tokens and password authentication are supported; self-signed TLS can be enabled per profile.
 4. Right-click the desktop → **Edit Widgets** → **ProxPulse**. Launch the app from Applications first and keep it running for fresh metrics.
@@ -184,7 +208,7 @@ git clone https://github.com/makskondrasov9-dev/ProxPulse.git
 cd ProxPulse
 ./scripts/verify-local.sh       # Build, API/core/UI checks, WidgetKit executable
 ./scripts/build-release.sh      # Optimized universal app + WidgetKit extension
-./scripts/create-dmg.sh         # dist/ProxPulse-v0.2.1.dmg + SHA-256
+./scripts/create-dmg.sh         # dist/ProxPulse-v0.2.2.dmg + SHA-256
 ```
 
 The compatibility helper confines any SDK compatibility adjustments to `.build`; it does not modify the SDK. On restricted development hosts, `PROXPULSE_LOCAL_CACHE=1` keeps SwiftPM caches inside the workspace. `PROXPULSE_REUSE_ICON=1` reuses the checked-in icon during release builds.

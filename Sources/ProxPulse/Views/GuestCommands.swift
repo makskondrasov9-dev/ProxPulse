@@ -1,6 +1,9 @@
 import SwiftUI
 import ProxPulseCore
 
+enum GuestSort: String, CaseIterable { case ram, cpu, vmid, name
+    var title: String { switch self { case .ram: "RAM ↓"; case .cpu: "CPU ↓"; case .vmid: "VMID"; case .name: "Имя" } }
+}
 enum WorkspaceViewMode: String, CaseIterable { case grid, rack, topology
     var title: String { switch self { case .grid: "Сетка"; case .rack: "Стойка"; case .topology: "Карта" } }
     var icon: String { switch self { case .grid: "square.grid.2x2"; case .rack: "server.rack"; case .topology: "point.3.connected.trianglepath.dotted" } }

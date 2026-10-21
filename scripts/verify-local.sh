@@ -12,6 +12,8 @@ swiftc -swift-version 6 -parse-as-library "${compiler_flags[@]}" -I "$BINARY_DIR
 "$BINARY_DIR/ProxPulse" --verify-sprint5
 "$BINARY_DIR/ProxPulse" --verify-sprint52
 "$BINARY_DIR/ProxPulse" --verify-sprint6
+"$BINARY_DIR/ProxPulse" --verify-sprint622
+"$BINARY_DIR/ProxPulse" --verify-sprint61
 swiftc -swift-version 6 -parse-as-library -application-extension -Xlinker -e -Xlinker _NSExtensionMain "${compiler_flags[@]}" -I "$BINARY_DIR/Modules" WidgetExtension/ProxPulseWidget.swift "$BINARY_DIR"/ProxPulseCore.build/*.swift.o "$BINARY_DIR"/ProxPulseWidgetUI.build/*.swift.o -o .build/ProxPulseWidget
 python3 scripts/verify-widget-entry.py .build/ProxPulseWidget
 plutil -lint AppInfo.plist ProxPulse.entitlements WidgetExtension/Info.plist ProxPulse.xcodeproj/project.pbxproj

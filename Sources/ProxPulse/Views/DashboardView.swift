@@ -15,6 +15,14 @@ struct DashboardView: View {
             VStack(spacing: 0) {
                 header
                 GeometryReader { viewport in
+                if model.selectedPage == "Обзор" {
+                    VStack(spacing: 16) {
+                        overview
+                        TopologyCanvasView(model: model)
+                            .environment(\.topologyViewportHeight, max(280, viewport.size.height - 350))
+                        insight
+                    }.padding(28)
+                } else {
                 ScrollView {
                     VStack(alignment: .leading, spacing: 22) {
                         if model.isLoading { HStack { ProgressView().controlSize(.small); T("Подключение к \(model.profileName)…").foregroundStyle(.secondary) } }
@@ -23,19 +31,10 @@ struct DashboardView: View {
                         else if model.selectedPage == "Машины" { guests }
                         else if model.selectedPage == "Диагностика" { diagnostics }
                         else if model.selectedPage == "Хранилище" { storagePage }
-                        else if model.workspaceMode == .topology { guests }
-                        else {
-                            overview
-                            HStack(alignment: .top, spacing: 20) {
-                                guests.frame(maxWidth: .infinity)
-                                if model.workspaceMode == .grid { radar.frame(width: 336) }
-                            }
-                            insight
-                        }
                     }.padding(28)
                 }
-                .environment(\.topologyViewportHeight, max(390, viewport.size.height - 205))
-                .scrollDisabled(model.workspaceMode == .topology && ["Обзор", "Машины"].contains(model.selectedPage))
+                }
+
                 }
                 HStack(spacing: 6) {
                     StatusDot(online: model.node.online && model.connectionError == nil)
@@ -54,6 +53,7 @@ struct DashboardView: View {
             }
         }
         .frame(minWidth: 1180, minHeight: 830)
+        .overlay { if model.quickSearchPresented { QuickSearchOverlay(model: model) } }
         .alert("ProxPulse", isPresented: Binding(get: { model.notice != nil }, set: { if !$0 { model.notice = nil } })) { LB("Понятно") { model.notice = nil } } message: { T(model.notice ?? "") }
         .modifier(GuestActionsPresentation(model: model, origin: .dashboard))
         .modifier(DestroyPresentation(model: model, origin: .dashboard))
@@ -108,7 +108,7 @@ struct DashboardView: View {
                 HStack { Image(systemName: "sparkles").foregroundStyle(accent.uiColor); T("Место для вашего кластера").font(.system(size: 11, weight: .medium)) }
                 T("Все системы.\nОдин спокойный взгляд.").font(.system(size: 11)).foregroundStyle(.secondary).lineSpacing(4)
             }.padding(13).frame(maxWidth: .infinity, alignment: .leading).background(.primary.opacity(0.025), in: RoundedRectangle(cornerRadius: 12))
-            HStack { Image(systemName: "circle.dotted"); T("ProxPulse"); Spacer(); T(Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "0.2.1") }.font(.system(size: 10)).foregroundStyle(.tertiary)
+            HStack { Image(systemName: "circle.dotted"); T("ProxPulse"); Spacer(); T(Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "0.2.2") }.font(.system(size: 10)).foregroundStyle(.tertiary)
         }.padding(.horizontal, 19).padding(.bottom, 20)
         .background(.ultraThinMaterial)
     }
@@ -131,6 +131,11 @@ struct DashboardView: View {
                 HStack(spacing: 6) { T(model.profileName); T("/").foregroundStyle(.tertiary); T(model.node.id); T("·"); T(model.hasSnapshot ? "Обновлено в \(model.lastUpdated.formatted(.dateTime.hour(.twoDigits(amPM: .omitted)).minute().locale(Locale(identifier: "en_GB"))))" : "Ожидание данных") }.font(.system(size: 11)).foregroundStyle(.secondary)
             }
             Spacer()
+            Button { model.quickSearchPresented = true } label: {
+                HStack(spacing: 8) { Image(systemName: "magnifyingglass"); T("Поиск машины, IP или действия…").lineLimit(1); Spacer(minLength: 4); Text("⌘K").font(.system(size: 10, design: .monospaced)).foregroundStyle(.tertiary) }
+                    .font(.system(size: 11)).foregroundStyle(.secondary).padding(.horizontal, 13).padding(.vertical, 10).frame(width: 270)
+                    .background(.ultraThinMaterial, in: Capsule()).overlay(Capsule().stroke(.primary.opacity(0.08)))
+            }.buttonStyle(.plain).keyboardShortcut("k", modifiers: .command)
             Button { model.refresh() } label: { Image(systemName: "arrow.clockwise").font(.system(size: 12, weight: .medium)).frame(width: 31, height: 31) }.buttonStyle(.plain).background(.primary.opacity(0.04), in: Circle()).localizedHelp("Обновить снимок")
         }.padding(.horizontal, 28).padding(.top, 28).padding(.bottom, 5)
     }
@@ -175,8 +180,8 @@ struct DashboardView: View {
             SectionTitle(title: "Виртуальные машины", detail: "\(model.node.guests.filter(\.running).count) работают · \(model.node.guests.filter { !$0.running }.count) выключена")
             HStack {
                 Picker(L10n.text("Режим отображения", language: language), selection: $model.workspaceMode) {
-                    ForEach(WorkspaceViewMode.allCases, id: \.self) { mode in Text((mode == .grid ? "⊞ " : mode == .rack ? "☷ " : "☍ ") + L10n.text(mode.title, language: language)).tag(mode) }
-                }.pickerStyle(.segmented).labelsHidden().frame(width: 330)
+                    ForEach([WorkspaceViewMode.grid, .rack], id: \.self) { mode in Text((mode == .grid ? "⊞ " : mode == .rack ? "☷ " : "☍ ") + L10n.text(mode.title, language: language)).tag(mode) }
+                }.pickerStyle(.segmented).labelsHidden().frame(width: 285)
                 Spacer()
                 Menu {
                     LB("Контейнер (LXC)") { model.creationKind = .lxc }
@@ -186,6 +191,9 @@ struct DashboardView: View {
             }
             HStack {
                 Picker(L10n.text("Статус", language: language), selection: $model.guestFilter) { T("Все").tag("Все"); T("Работают").tag("Работают"); T("Выключены").tag("Выключены") }.pickerStyle(.segmented).labelsHidden().frame(width: 247)
+                Picker(L10n.text("Сортировка", language: language), selection: $model.guestSort) {
+                    ForEach(GuestSort.allCases, id: \.self) { T($0.title).tag($0) }
+                }.frame(width: 175)
                 Spacer(minLength: 5)
                 HStack(spacing: 4) { Image(systemName: "magnifyingglass").foregroundStyle(.tertiary); LTextField("Поиск", text: $model.search).textFieldStyle(.plain) }.font(.system(size: 10)).padding(7).frame(width: 105).background(.primary.opacity(0.035), in: RoundedRectangle(cornerRadius: 7))
             }
@@ -197,10 +205,11 @@ struct DashboardView: View {
                         ForEach(model.filteredGuests) { guest in GuestCard(guest: guest, model: model) }
                     }
                 case .rack: FrontRackView(model: model)
-                case .topology: TopologyCanvasView(model: model)
+                case .topology: FrontRackView(model: model) // Legacy saved mode; selection migrates to Grid.
                 }
             }.id(model.workspaceMode).transition(.opacity.combined(with: .scale(scale: 0.985)))
         }
+        .onAppear { if model.workspaceMode == .topology { model.workspaceMode = .grid } }
         .animation(.spring(response: 0.45, dampingFraction: 0.8), value: model.workspaceMode)
     }
     private var radar: some View {

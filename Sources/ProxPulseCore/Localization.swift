@@ -2,6 +2,21 @@ import Foundation
 
 public enum L10n {
     public static let english: [String: String] = [
+        "Машина не найдена": "Machine not found",
+        "По размеру": "Fit to window",
+        "Приблизить": "Zoom in",
+        "Отдалить": "Zoom out",
+        "Масштаб 100%": "Actual size (100%)",
+
+        "Поиск машины, IP или действия…": "Search machines, IP or actions…",
+        "Сортировка": "Sort by",
+        "Имя": "Name",
+        "Ничего не найдено": "No results",
+        "Инспектор": "Inspector",
+        "Для каждого виджета машины: правый клик → Изменить виджет → Машина. Выбор независим для каждого экземпляра.": "For each machine widget: right-click → Edit Widget → Machine. Each widget has its own selection.",
+        "Правый клик → Изменить виджет → Машина.": "Right-click → Edit Widget → Machine.",
+        "Машина недоступна на активном сервере": "Machine unavailable on the active server",
+
         "Обновления": "Updates",
         "Новые версии ProxPulse с GitHub": "New ProxPulse releases from GitHub",
         "Проверить обновления": "Check for updates",

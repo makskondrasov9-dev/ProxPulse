@@ -13,7 +13,6 @@ struct SettingsView: View {
     @AppStorage(PreferenceKey.diskAlerts) private var diskAlerts = true
     @AppStorage(PreferenceKey.nodeAlerts) private var nodeAlerts = true
     @AppStorage(PreferenceKey.notificationSound) private var sound = true
-    @AppStorage(PreferenceKey.widgetMachine) private var widgetMachine = Data()
     @AppStorage(PreferenceKey.sshUser) private var sshUser = "root"
     private let notifications = NotificationService.shared
     init(model: DashboardModel, embedded: Bool = false) { self.model = model; self.embedded = embedded }
@@ -28,7 +27,6 @@ struct SettingsView: View {
     }
     var body: some View {
         content
-        .onChange(of: widgetMachine) { model.publishSnapshot(force: true) }
         .onChange(of: interval) { model.preferencesChanged(restart: true) }
         .onChange(of: language) { model.preferencesChanged() }
         .onChange(of: accent) { model.preferencesChanged() }
@@ -103,19 +101,10 @@ struct SettingsView: View {
             section("Виджеты", icon: "rectangle.3.group", subtitle: "Кластер на вашем рабочем столе") {
                 T("Нажмите правой кнопкой на рабочем столе → Изменить виджеты → найдите ProxPulse. Выберите малый, средний или большой виджет.").foregroundStyle(.secondary)
                 T("Виджеты читают общий кеш. Время обновления определяет macOS; приложение должно быть запущено для получения свежих данных.").font(.caption).foregroundStyle(.secondary)
-                setting("Машина для виджета") {
-                    Picker("", selection: machineSelection) {
-                        T("Выберите машину").tag("")
-                        ForEach(model.node.guests) { guest in Text("\(guest.name) · \(guest.kind.rawValue.uppercased()) \(guest.id)").tag(MonitoringRules.guestKey(guest)) }
-                    }.labelsHidden().frame(maxWidth: 300)
-                }
+                T("Для каждого виджета машины: правый клик → Изменить виджет → Машина. Выбор независим для каждого экземпляра.").font(.caption).foregroundStyle(.secondary)
                 if let error = model.widgetError { T(error).font(.caption).foregroundStyle(.orange) }
             }
         }.toggleStyle(.switch).controlSize(.small).font(.system(size: 12)).frame(maxWidth: .infinity, alignment: .leading)
-    }
-    private var machineSelection: Binding<String> {
-        Binding(get: { WidgetMachineSelection.machine(profile: model.selectedProfile, data: widgetMachine) ?? "" },
-                set: { widgetMachine = WidgetMachineSelection.setting($0, profile: model.selectedProfile, data: widgetMachine) })
     }
     private func setting<Content: View>(_ title: String, @ViewBuilder content: () -> Content) -> some View {
         HStack { T(title); Spacer(); content() }

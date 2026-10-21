@@ -9,6 +9,20 @@ import WidgetKit
     @State private var model = DashboardModel()
     init() {
         #if DEBUG
+        if CommandLine.arguments.contains("--verify-sprint61") {
+            Task { @MainActor in
+                do { try await Sprint61Verification.run(); exit(0) }
+                catch { print("SPRINT 6.1: \(error.localizedDescription)"); exit(1) }
+            }
+            RunLoop.main.run()
+        }
+        if CommandLine.arguments.contains("--verify-sprint622") {
+            Task { @MainActor in
+                do { try await Sprint622Verification.run(); exit(0) }
+                catch { print("SPRINT 6.2.2: \(error.localizedDescription)"); exit(1) }
+            }
+            RunLoop.main.run()
+        }
         if CommandLine.arguments.contains("--verify-sprint6") {
             Task { @MainActor in
                 do { try await Sprint6Verification.run(); exit(0) }

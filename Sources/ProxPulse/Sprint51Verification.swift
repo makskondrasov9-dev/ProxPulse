@@ -16,6 +16,8 @@ import ProxPulseCore
     var scope = ""
     var reset: () -> Void = {}
     var recenter: () -> Void = {}
+    var zoomTo: (CGFloat, CGPoint?) -> Void = { _, _ in }
+    var filter: (String) -> Void = { _ in }
     func record(viewport: CGSize, origin: CGPoint, bounds: CGRect, scale: CGFloat, pan: CGSize, cameraCenter: CGPoint, nodes: [(String, CGPoint, CGSize)], badgeCount: Int, positions: [String: CanvasPosition], scope: String, reset: @escaping () -> Void, recenter: @escaping () -> Void) {
         self.viewport = viewport; self.origin = origin; self.bounds = bounds; self.scale = scale; self.pan = CGSize(width: pan.width + (bounds.midX-cameraCenter.x)*scale, height: pan.height + (bounds.midY-cameraCenter.y)*scale)
         centers = Dictionary(uniqueKeysWithValues: nodes.map { id, point, _ in
@@ -42,7 +44,7 @@ import ProxPulseCore
         defer { model.stop() }
         model.selectedPage = "Машины"; model.workspaceMode = .topology
         await model.refreshTopology()
-        let host = NSHostingView(rootView: DashboardView(model: model, animate: false).pulseAppearance().defaultAppStorage(defaults).environment(\.colorScheme, .dark))
+        let host = NSHostingView(rootView: TopologyCanvasView(model: model).environment(\.topologyViewportHeight, 900).pulseAppearance().defaultAppStorage(defaults).environment(\.colorScheme, .dark))
         let window = NSWindow(contentRect: .init(x: 60, y: 60, width: 1440, height: 960), styleMask: [.borderless], backing: .buffered, defer: false)
         window.title = "ProxPulse — Sprint 5.1 interaction check"; window.appearance = NSAppearance(named: .darkAqua); window.contentView = host
         NSApp.setActivationPolicy(.regular); window.makeKeyAndOrderFront(nil); NSApp.activate(ignoringOtherApps: true)
@@ -66,16 +68,16 @@ import ProxPulseCore
             precondition(probe.positions[id] != nil, "Native drag did not move \(id)")
             precondition(model.inspectedGuest == nil, "Drag incorrectly opened inspector")
         }
-        let archive = TopologyLayoutArchive(data: defaults.data(forKey: "pulse.topologyLayout.v1") ?? Data())
+        let archive = TopologyLayoutArchive(data: defaults.data(forKey: "pulse.topologyLayout.centered.v2") ?? Data())
         precondition(archive.positions(in: probe.scope).count >= 4, "Node positions were not persisted")
-        let restored = NSHostingView(rootView: DashboardView(model: model, animate: false).pulseAppearance().defaultAppStorage(defaults).environment(\.colorScheme, .dark))
+        let restored = NSHostingView(rootView: TopologyCanvasView(model: model).environment(\.topologyViewportHeight, 900).pulseAppearance().defaultAppStorage(defaults).environment(\.colorScheme, .dark))
         window.contentView = restored
         try await Task.sleep(for: .milliseconds(800))
         precondition(probe.positions.count >= 4, "Recreated canvas did not reload persisted positions")
         save(restored, "sprint51-layout-restored")
         probe.reset(); try await Task.sleep(for: .milliseconds(350))
         precondition(probe.positions.isEmpty)
-        precondition(TopologyLayoutArchive(data: defaults.data(forKey: "pulse.topologyLayout.v1") ?? Data()).positions(in: probe.scope).isEmpty)
+        precondition(TopologyLayoutArchive(data: defaults.data(forKey: "pulse.topologyLayout.centered.v2") ?? Data()).positions(in: probe.scope).isEmpty)
         save(restored, "sprint51-auto-layout")
         if hardBounds {
             for prefix in ["host/", "bridge/", "tunnel/", "guest/"] {

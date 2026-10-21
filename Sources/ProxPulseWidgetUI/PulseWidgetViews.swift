@@ -150,13 +150,14 @@ public struct PulseWidgetView: View {
 
 public struct MachineWidgetView: View {
     public let entry: PulseEntry
-    public init(entry: PulseEntry) { self.entry = entry }
+    public let machineKey: String?
+    public init(entry: PulseEntry, machineKey: String? = nil) { self.entry = entry; self.machineKey = machineKey }
     private var language: String { entry.snapshot?.language ?? "ru" }
     private func text(_ value: String) -> String { L10n.text(value, language: language) }
     public var body: some View {
         VStack(alignment: .leading, spacing: 9) {
             if let snapshot = entry.snapshot,
-               let key = snapshot.selectedMachineKey,
+               let key = machineKey,
                let machine = snapshot.guests?.first(where: { MonitoringRules.guestKey($0) == key }) {
                 HStack { Circle().fill(machine.running ? .green : .gray).frame(width: 7, height: 7); Text(machine.name).font(.headline).lineLimit(1); Spacer(); if snapshot.isDemo { Text("DEMO").font(.system(size: 8, weight: .bold)) } }
                 HStack { Text("\(machine.kind == .lxc ? "CT" : "VM") \(machine.id)"); Spacer(); Text(machine.running ? "Online" : "Offline") }.font(.caption).foregroundStyle(.secondary)
@@ -167,7 +168,7 @@ public struct MachineWidgetView: View {
                 if snapshot.state == .error || entry.date.timeIntervalSince(snapshot.date) >= 300 { Text(text("Снимок устарел")).font(.caption2).foregroundStyle(.orange) }
             } else {
                 Label(text("Машина"), systemImage: "shippingbox").font(.headline)
-                Text(text("Выберите машину в настройках ProxPulse → Виджеты.")).font(.caption).foregroundStyle(.secondary)
+                Text(text(machineKey == nil ? "Правый клик → Изменить виджет → Машина." : "Машина не найдена")).font(.caption).foregroundStyle(.secondary)
             }
         }.frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
             .containerBackground(.ultraThinMaterial, for: .widget)

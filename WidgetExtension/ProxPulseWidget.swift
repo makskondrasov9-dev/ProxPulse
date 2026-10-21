@@ -1,5 +1,6 @@
 import SwiftUI
 import WidgetKit
+import AppIntents
 import ProxPulseWidgetUI
 
 struct ClusterWidget: Widget {
@@ -12,12 +13,18 @@ struct ClusterWidget: Widget {
 }
 struct MachineWidget: Widget {
     var body: some WidgetConfiguration {
-        StaticConfiguration(kind: "ProxPulse.Machine", provider: PulseTimelineProvider()) { MachineWidgetView(entry: $0) }
+        AppIntentConfiguration(kind: "ProxPulse.Machine", intent: SelectMachineIntent.self, provider: MachineTimelineProvider()) { entry in
+            MachineWidgetView(entry: .init(date: entry.date, snapshot: entry.snapshot), machineKey: entry.machineKey)
+        }
             .configurationDisplayName("ProxPulse · Container / VM")
-            .description("Status · vCPU · RAM · IP · Uptime. Select a machine in ProxPulse Settings.")
+            .description("Status · vCPU · RAM · IP · Uptime. Right-click → Edit Widget to choose a machine for each widget.")
             .supportedFamilies([.systemMedium])
     }
 }
 @main struct ProxPulseWidget: WidgetBundle {
     var body: some Widget { ClusterWidget(); MachineWidget() }
+}
+
+struct WidgetIntentsPackage: AppIntentsPackage {
+    static var includedPackages: [any AppIntentsPackage.Type] { [ProxPulseIntentsPackage.self] }
 }

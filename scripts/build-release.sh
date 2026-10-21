@@ -3,8 +3,8 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 source scripts/swift-environment.sh
-VERSION=0.2.1
-BUILD=14
+VERSION=0.2.2
+BUILD=16
 RELEASE="$PWD/.build/public-release"
 APP="$RELEASE/ProxPulse.app"
 mkdir -p "$RELEASE"
@@ -48,6 +48,11 @@ ext={**common,'CFBundleExecutable':'ProxPulseWidget','CFBundleIdentifier':'dev.p
 for path,info in [(app/'Contents/Info.plist',host),(app/'Contents/PlugIns/ProxPulseWidget.appex/Contents/Info.plist',ext)]:
  with path.open('wb') as stream: plistlib.dump(info,stream)
 PY
+# SwiftPM/CLT does not run Xcode's ExtractAppIntentsMetadata build phase.
+native_dir="$(swift build -c release --triple x86_64-apple-macosx14.0 --scratch-path .build/production-x86_64 --show-bin-path)"
+swiftc -swift-version 6 "${compiler_flags[@]}" -I "$native_dir/Modules" scripts/widget-intents-metadata.swift \
+    "$native_dir"/ProxPulseCore.build/*.o "$native_dir"/ProxPulseWidgetUI.build/*.o -o "$RELEASE/widget-intents-metadata"
+"$RELEASE/widget-intents-metadata" "$EXTENSION/Contents/Resources/Metadata.appintents"
 # Preserve the proper entitlements explicitly, signing nested code before its host.
 codesign --force --sign - --entitlements ProxPulse.entitlements "$EXTENSION"
 codesign --force --sign - --entitlements ProxPulse.local.entitlements "$APP"

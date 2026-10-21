@@ -18,7 +18,7 @@ import ProxPulseWidgetUI
         RuntimeUIVerification.capture(AddServerSheet(model: model, existing: profile).pulseAppearance().defaultAppStorage(defaults), size: .init(width: 640, height: 850), name: "sprint6-vpn-profile")
         var snapshot = WidgetSnapshot(node: MockDataProvider.node, isDemo: true)
         snapshot.selectedMachineKey = MonitoringRules.guestKey(MockDataProvider.guests[1]); snapshot.guests?[1].ipAddresses = ["192.0.2.10"]
-        RuntimeUIVerification.capture(MachineWidgetView(entry: .init(date: .now, snapshot: snapshot)).padding(16).environment(\.colorScheme, .dark), size: .init(width: 360, height: 170), name: "sprint6-machine-widget")
+        RuntimeUIVerification.capture(MachineWidgetView(entry: .init(date: .now, snapshot: snapshot), machineKey: snapshot.selectedMachineKey).padding(16).environment(\.colorScheme, .dark), size: .init(width: 360, height: 170), name: "sprint6-machine-widget")
         if ProcessInfo.processInfo.environment["PROXPULSE_VERIFY_GITHUB"] == "1" {
             await model.updates.check()
             precondition(model.updates.error == nil, "GitHub update check failed")

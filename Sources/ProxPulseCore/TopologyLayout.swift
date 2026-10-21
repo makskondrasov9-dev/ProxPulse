@@ -48,6 +48,20 @@ public enum TopologyCamera {
     public static func visibleScale(_ requested: CGFloat, bounds: CGRect, viewport: CGSize) -> CGFloat {
         min(max(0.001, requested), fit(bounds: bounds, viewport: viewport, padding: 24))
     }
+    /// Allow deliberate zoom beyond Fit while preventing panning the graph into empty space.
+    public static func navigationClamp(_ proposed: CGSize, bounds: CGRect, viewport: CGSize, scale: CGFloat, padding: CGFloat = 24) -> CGSize {
+        func axis(_ value: CGFloat, span: CGFloat, available: CGFloat) -> CGFloat {
+            let limit = abs(max(1, available - 2*padding) - span*scale)/2
+            return min(limit, max(-limit, value))
+        }
+        guard !bounds.isNull else { return .zero }
+        return CGSize(width: axis(proposed.width, span: bounds.width, available: viewport.width), height: axis(proposed.height, span: bounds.height, available: viewport.height))
+    }
+    public static func anchoredPan(anchor: CGPoint, viewport: CGSize, pan: CGSize, oldScale: CGFloat, newScale: CGFloat) -> CGSize {
+        let ratio = newScale / max(0.001, oldScale)
+        return CGSize(width: anchor.x - viewport.width/2 - (anchor.x - viewport.width/2 - pan.width)*ratio,
+                      height: anchor.y - viewport.height/2 - (anchor.y - viewport.height/2 - pan.height)*ratio)
+    }
     public static func screenPoint(_ world: CGPoint, viewport: CGSize, center: CGPoint, pan: CGSize, scale: CGFloat) -> CGPoint {
         CGPoint(x: viewport.width/2 + pan.width + (world.x-center.x)*scale,
                 y: viewport.height/2 + pan.height + (world.y-center.y)*scale)

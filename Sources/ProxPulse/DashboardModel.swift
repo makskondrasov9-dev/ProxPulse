@@ -30,6 +30,8 @@ struct MetricSample: Identifiable {
     var topologyGuestAddresses: [String: [String]] = [:]
     var topologyAddressErrors: [String: String] = [:]
     private var topologyAddressDate: Date?
+    var quickSearchPresented = false
+    var guestSort = GuestSort.vmid
     var search = ""
     var guestFilter = "Все"
     var notice: String?
@@ -110,9 +112,21 @@ struct MetricSample: Identifiable {
     }
     var filteredGuests: [Guest] {
         node.guests.filter { guest in
-            (search.isEmpty || guest.name.localizedCaseInsensitiveContains(search) || String(guest.id).contains(search)) &&
+            matches(guest, query: search) &&
             (guestFilter == "Все" || (guestFilter == "Работают" && guest.running) || (guestFilter == "Выключены" && !guest.running))
+        }.sorted { a, b in
+            switch guestSort {
+            case .ram: return a.memoryGB == b.memoryGB ? a.id < b.id : a.memoryGB > b.memoryGB
+            case .cpu: return a.cpu == b.cpu ? a.id < b.id : a.cpu > b.cpu
+            case .vmid: return a.id < b.id
+            case .name: return a.name == b.name ? a.id < b.id : a.name.localizedStandardCompare(b.name) == .orderedAscending
+            }
         }
+    }
+    func addresses(for guest: Guest) -> [String] { topologyGuestAddresses[MonitoringRules.guestKey(guest)] ?? guest.ipAddresses ?? [] }
+    func matches(_ guest: Guest, query: String) -> Bool {
+        let q = query.trimmingCharacters(in: .whitespacesAndNewlines)
+        return q.isEmpty || guest.name.localizedCaseInsensitiveContains(q) || String(guest.id).contains(q) || addresses(for: guest).contains { $0.localizedCaseInsensitiveContains(q) }
     }
     func addProfile(_ profile: ServerProfile, secret: String) throws {
         try KeychainManager.save(secret, for: profile.id)
@@ -231,7 +245,7 @@ struct MetricSample: Identifiable {
     var widgetSnapshot: WidgetSnapshot {
         var snapshot = WidgetSnapshot(node: node, isDemo: isDemo)
         snapshot.profileID = selectedProfile; snapshot.profileName = profileName
-        snapshot.selectedMachineKey = WidgetMachineSelection.machine(profile: selectedProfile, data: UserDefaults.standard.data(forKey: PreferenceKey.widgetMachine))
+
         snapshot.state = isDemo ? .demo : connectionError != nil ? .error : !hasSnapshot ? .connecting : node.online ? .live : .offline
         snapshot.date = hasSnapshot ? lastUpdated : Date()
         snapshot.guests = node.guests.map { guest in

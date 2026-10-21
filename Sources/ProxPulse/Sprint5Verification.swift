@@ -7,6 +7,7 @@ import ProxPulseCore
         let demo = DashboardModel(loadProfiles: false)
         demo.selectedPage = "Машины"
         for mode in WorkspaceViewMode.allCases {
+            demo.selectedPage = mode == .topology ? "Обзор" : "Машины"
             demo.workspaceMode = mode
             if mode == .topology { await demo.refreshTopology() }
             demo.inspect(demo.node.guests[0])

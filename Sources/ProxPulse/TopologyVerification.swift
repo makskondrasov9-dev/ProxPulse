@@ -62,7 +62,7 @@ final class TopologyFrameProbe: @unchecked Sendable {
         let defaults = UserDefaults(suiteName: suite)!
         defer { defaults.removePersistentDomain(forName: suite) }
         defaults.set(true, forKey: "pulse.topologyVPNProbe"); defaults.set(true, forKey: "pulse.topologyLineSpeeds")
-        model.selectedPage = "Машины"; model.workspaceMode = .topology
+        model.selectedPage = "Обзор"
         let host = NSHostingView(rootView: DashboardView(model: model, animate: false).pulseAppearance().defaultAppStorage(defaults).environment(\.colorScheme, .dark))
         let window = NSWindow(contentRect: .init(x: 70, y: 70, width: 1440, height: 960), styleMask: [.titled, .closable, .resizable], backing: .buffered, defer: false)
         window.title = "ProxPulse — Topology verification"
