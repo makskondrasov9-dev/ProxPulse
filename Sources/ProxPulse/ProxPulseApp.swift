@@ -9,6 +9,20 @@ import WidgetKit
     @State private var model = DashboardModel()
     init() {
         #if DEBUG
+        if CommandLine.arguments.contains("--verify-profile-form") {
+            Task { @MainActor in
+                do { try await ProfileFormVerification.run(); exit(0) }
+                catch { print("PROFILE FORM: \(error.localizedDescription)"); exit(1) }
+            }
+            RunLoop.main.run()
+        }
+        if CommandLine.arguments.contains("--verify-sprint7") {
+            Task { @MainActor in
+                do { try await Sprint7Verification.run(); exit(0) }
+                catch { print("SPRINT 7: \(error.localizedDescription)"); exit(1) }
+            }
+            RunLoop.main.run()
+        }
         if CommandLine.arguments.contains("--verify-sprint61") {
             Task { @MainActor in
                 do { try await Sprint61Verification.run(); exit(0) }
@@ -252,7 +266,7 @@ import WidgetKit
     }
     var body: some Scene {
         Window("ProxPulse", id: "dashboard") {
-            DashboardView(model: model).pulseAppearance().task { delegate.model = model; model.start(); model.publishSnapshot(); await model.updates.atLaunch(); if CommandLine.arguments.contains("--add-server") { model.showAddServer = true } }
+            DashboardView(model: model).pulseAppearance().task { delegate.model = model; await model.start(); model.publishSnapshot(); await model.updates.atLaunch(); if CommandLine.arguments.contains("--add-server") { model.showAddServer = true } }
             .onOpenURL { url in if url.scheme == "proxpulse" { openWindow(id: "dashboard"); NSApp.activate(ignoringOtherApps: true) } }
         }.defaultSize(width: 1280, height: 900)
         .windowStyle(.hiddenTitleBar)

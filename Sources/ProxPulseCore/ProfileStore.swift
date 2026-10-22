@@ -30,9 +30,8 @@ public enum ProfileValidation {
         if !raw.contains("://") { raw = "https://" + raw }
         guard var c = URLComponents(string: raw), c.scheme == "https", let host = c.host, !host.isEmpty,
               c.user == nil, c.password == nil, c.query == nil, c.fragment == nil,
-              c.path.isEmpty || c.path == "/", c.port.map({ (1...65535).contains($0) }) ?? true else { throw ProxmoxError.invalidEndpoint }
-        if c.port == nil { c.port = 8006 }
-        c.path = ""
+              !c.path.split(separator: "/").contains(where: { $0 == ".." || $0 == "." }), c.port.map({ (1...65535).contains($0) }) ?? true else { throw ProxmoxError.invalidEndpoint }
+        while c.path.hasSuffix("/") { c.path.removeLast() }
         guard let url = c.url else { throw ProxmoxError.invalidEndpoint }
         return url
     }

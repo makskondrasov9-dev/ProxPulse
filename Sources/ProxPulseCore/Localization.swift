@@ -2,6 +2,21 @@ import Foundation
 
 public enum L10n {
     public static let english: [String: String] = [
+        "Локальный резервный адрес (LAN IP)": "Local fallback address (LAN IP)",
+        "Укажите корректный локальный HTTPS адрес.": "Enter a valid local HTTPS address.",
+        "Без порта: HTTPS 443. Явный порт и префикс /pve сохраняются.": "No port: HTTPS 443. Explicit ports and /pve prefixes are preserved.",
+        "Для этого IP или домена. Проверка цепочки сертификата подключения будет отключена.": "For this IP or domain. Certificate chain validation is disabled for this connection.",
+        "Использовать LAN": "Use LAN",
+        "Внешний адрес": "External address",
+        "Подготовка замены приложения…": "Preparing app replacement…",
+        "Загрузка отменена": "Download cancelled",
+        "Отменить загрузку": "Cancel download",
+        "Открыть скачанный DMG": "Open downloaded DMG",
+        "Домен не существует или опечатка в адресе.": "Domain does not exist or contains a typo.",
+        "Сервер недоступен. Проверьте доступность порта 443/8006 или включите VPN.": "Server unavailable. Check port 443/8006 or enable your VPN.",
+        "Ошибка SSL. Возможно, самоподписанный сертификат. Включите тумблер «Разрешить самоподписанный SSL».": "SSL error. The certificate may be self-signed. Enable Allow self-signed SSL.",
+        "Неверный логин, пароль или API токен (HTTP 401).": "Invalid login, password or API token (HTTP 401).",
+
         "Машина не найдена": "Machine not found",
         "По размеру": "Fit to window",
         "Приблизить": "Zoom in",
@@ -195,7 +210,9 @@ public enum L10n {
         "В журнале ядра обнаружено принудительное завершение процесса из-за нехватки памяти.": "The kernel log records a process killed due to insufficient memory.",
         "Ваш Proxmox. Напрямую с этого Mac.": "Your Proxmox. Directly from this Mac.",
         "Ваш кластер, в балансе.": "Your cluster, in balance.",
-        "Введите Secret API-токена в формате UUID.": "Enter the API token secret in UUID format.",
+        "Введите Secret API-токена.": "Enter the API token secret.",
+        "Секрет API-токена": "API token secret",
+        "Оставьте пустым, чтобы сохранить текущий": "Leave blank to keep the saved credential",
         "Введите логин, например root или root@pam.": "Enter a username, for example root or root@pam.",
         "Введите пароль Proxmox.": "Enter your Proxmox password.",
         "Введите пользователя с realm, например monitor@pve.": "Enter a user and realm, for example monitor@pve.",

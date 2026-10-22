@@ -113,7 +113,7 @@ func verifyAPIFixtures() async throws {
     precondition(ProfileValidation.username("", mode: .password) == nil)
     precondition(ProfileValidation.username("root@pam@pve", mode: .password) == nil)
     let endpoint = try ProfileValidation.endpoint("192.168.1.228")
-    precondition(endpoint.absoluteString == "https://192.168.1.228:8006")
+    precondition(endpoint.absoluteString == "https://192.168.1.228")
     precondition(ProfileValidation.isLocal("172.16.1.2") && !ProfileValidation.isLocal("172.32.1.2"))
     for mode in AuthenticationMode.allCases {
         APIFixtureProtocol.state.reset(mode)

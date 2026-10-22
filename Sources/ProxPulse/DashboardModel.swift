@@ -14,6 +14,12 @@ struct MetricSample: Identifiable {
     var profiles: [ServerProfile] = []
     var selectedProfile = DashboardModel.demoID { didSet { if oldValue != selectedProfile { if persistSelection { UserDefaults.standard.set(selectedProfile.uuidString, forKey: "pulse.lastProfile") }; switchProfile() } } }
     var selectedNode = "" { didSet { if oldValue != selectedNode && !isDemo && !changingProfile { restartPolling(clear: true) } } }
+    var usingLAN = false
+    private var topologyTask: Task<Void, Never>?
+    private var widgetPublishTask: Task<Void, Never>?
+    private let snapshotWriter = SnapshotWriter()
+    private var widgetSequence = 0
+    private var widgetReloadPending = false
     var availableNodes: [String] = []
     var node = MockDataProvider.node
     var selectedPage = "Обзор"
@@ -92,18 +98,18 @@ struct MetricSample: Identifiable {
                 return sample
             }
         }
-        if loadProfiles {
-            do { profiles = try ProfileStore.load() }
-            catch { notice = "Не удалось прочитать профили: \(error.localizedDescription)" }
-        }
     }
-    func start() {
+    func start() async {
         guard !started else { return }; started = true
         guard persistSelection else { return }
+        do { profiles = try await Task.detached(priority: .utility) { try ProfileStore.load() }.value }
+        catch { notice = "Не удалось прочитать профили: \(error.localizedDescription)" }
+        guard !Task.isCancelled else { return }
         let stored = UserDefaults.standard.string(forKey: "pulse.lastProfile").flatMap(UUID.init(uuidString:))
         if let stored, stored == Self.demoID { return }
         if let profile = profiles.first(where: { $0.id == stored }) ?? profiles.first { selectedProfile = profile.id }
     }
+    func selectConnection(local: Bool) { usingLAN = local; restartPolling(clear: true) }
     func preferencesChanged(restart: Bool = false) { publishSnapshot(force: true); if restart { sleepTask?.cancel() } }
     func notificationPreferencesChanged() {
         guard !isDemo else { return }
@@ -128,19 +134,26 @@ struct MetricSample: Identifiable {
         let q = query.trimmingCharacters(in: .whitespacesAndNewlines)
         return q.isEmpty || guest.name.localizedCaseInsensitiveContains(q) || String(guest.id).contains(q) || addresses(for: guest).contains { $0.localizedCaseInsensitiveContains(q) }
     }
-    func addProfile(_ profile: ServerProfile, secret: String) throws {
-        try KeychainManager.save(secret, for: profile.id)
-        do { try ProfileStore.save(profiles + [profile]) }
-        catch { try? KeychainManager.delete(for: profile.id); throw error }
+    func addProfile(_ profile: ServerProfile, secret: String) async throws {
+        let saved = profiles + [profile]
+        try await Task.detached(priority: .utility) {
+            try KeychainManager.save(secret, for: profile.id)
+            do { try ProfileStore.save(saved) }
+            catch { try? KeychainManager.delete(for: profile.id); throw error }
+        }.value
         profiles.append(profile)
         selectedProfile = profile.id
     }
-    func updateProfile(_ profile: ServerProfile, secret: String?) throws {
+    func updateProfile(_ profile: ServerProfile, secret: String?) async throws {
         guard let index = profiles.firstIndex(where: { $0.id == profile.id }) else { return }
         var updated = profiles; updated[index] = profile
-        try ProfileStore.save(updated)
-        do { if let secret { try KeychainManager.save(secret, for: profile.id) } }
-        catch { try? ProfileStore.save(profiles); throw error }
+        let previous = profiles
+        let saved = updated
+        try await Task.detached(priority: .utility) {
+            try ProfileStore.save(saved)
+            do { if let secret { try KeychainManager.save(secret, for: profile.id) } }
+            catch { try? ProfileStore.save(previous); throw error }
+        }.value
         profiles = updated
         if selectedProfile == profile.id { switchProfile() }
         else { selectedProfile = profile.id }
@@ -173,7 +186,7 @@ struct MetricSample: Identifiable {
         restartPolling(clear: true)
     }
     private func restartPolling(clear: Bool) {
-        pollTask?.cancel(); sleepTask?.cancel(); offlineTask?.cancel(); diagnosticTask?.cancel(); addressTask?.cancel()
+        pollTask?.cancel(); sleepTask?.cancel(); offlineTask?.cancel(); diagnosticTask?.cancel(); addressTask?.cancel(); topologyTask?.cancel()
         operationTasks.values.forEach { $0.cancel() }; operationTasks = [:]; busyGuests = []
         rules = MonitoringRules(); revision += 1
         isDiagnosing = false; loadingTopology = false; probingTunnels = false; service = nil; connectionError = nil
@@ -182,7 +195,8 @@ struct MetricSample: Identifiable {
             node = MockDataProvider.node; incidentReport = .demo; hasSnapshot = true; isLoading = false; lastUpdated = Date()
             publishSnapshot(force: true); return
         }
-        guard let profile = profiles.first(where: { $0.id == selectedProfile }) else { return }
+        guard var profile = profiles.first(where: { $0.id == selectedProfile }) else { return }
+        if usingLAN, let local = profile.localEndpoint { profile.endpoint = local }
         let current = revision
         let preferred = selectedNode.isEmpty ? nil : selectedNode
         isLoading = true
@@ -197,12 +211,21 @@ struct MetricSample: Identifiable {
         }
         pollTask = Task { [weak self] in
             do {
+                guard !Task.isCancelled, self?.revision == current else { return }
                 let api = try ProxmoxAPIService(profile: profile)
-                guard let self, current == self.revision else { return }
-                self.service = api
+                self?.service = api
+                var establishing = true
                 while !Task.isCancelled {
+                    let cycleStart = Date()
+                    let interval = Double(self?.pollInterval ?? 4)
                     do {
-                        let snapshot = try await api.snapshot(node: preferred)
+                    guard let self, current == self.revision else { return }
+                    do {
+                        // DNS/TLS/password authentication gets a bounded startup budget. Steady-state
+                        // cycles stay at the selected interval and cancel outstanding detail requests.
+                        let budget = establishing ? max(15, interval) : interval
+                        let snapshot = try await PollDeadline.run(seconds: budget) { try await api.snapshot(node: preferred, detailDeadline: cycleStart.addingTimeInterval(max(0.1, budget-0.35))) }
+                        establishing = false
                         try Task.checkCancellation()
                         guard current == self.revision else { return }
                         self.availableNodes = snapshot.nodes
@@ -211,7 +234,9 @@ struct MetricSample: Identifiable {
                         self.guestHistory = self.guestHistory.filter { keys.contains($0.key) }
                         for guest in snapshot.node.guests where guest.telemetryDate != nil {
                             let key = MonitoringRules.guestKey(guest)
-                            self.guestHistory[key, default: []].append(GuestSample(guest: guest, date: guest.telemetryDate!))
+                            if self.guestHistory[key]?.last?.date != guest.telemetryDate! {
+                                self.guestHistory[key, default: []].append(GuestSample(guest: guest, date: guest.telemetryDate!))
+                            }
                             self.guestHistory[key] = Array(self.guestHistory[key, default: []].suffix(120))
                         }
                         self.node = snapshot.node
@@ -221,25 +246,31 @@ struct MetricSample: Identifiable {
                         self.history = Array(self.history.suffix(30))
                         if !self.incidentPresented { self.incidentReport = .live(storage: snapshot.node.storage, guests: snapshot.node.guests) }
                         if self.topologyAddressDate == nil || Date().timeIntervalSince(self.topologyAddressDate!) > 45 {
-                            await self.refreshTopology()
-                            guard current == self.revision, !Task.isCancelled else { return }
+                            if self.topologyTask == nil {
+                                self.topologyTask = Task { [weak self] in
+                                    await self?.refreshTopology()
+                                    if let self, current == self.revision { self.topologyTask = nil }
+                                }
+                            }
                         }
                         self.publishSnapshot()
                     } catch is CancellationError { return }
                     catch {
                         guard current == self.revision && !Task.isCancelled else { return }
-                        self.connectionError = error.localizedDescription; self.isLoading = false
+                        self.connectionError = ConnectionFailure.map(error).localizedDescription; self.isLoading = false
                         if case ProxmoxError.http(401) = error { self.rules.clearFailure() }
                         else if case ProxmoxError.http(403) = error { self.rules.clearFailure() }
                         else { self.rules.failed() }
                         self.publishSnapshot()
                     }
-                    let sleep = Task<Void, Never> { do { try await Task.sleep(for: .seconds(self.pollInterval)) } catch {} }
-                    self.sleepTask = sleep
+                    }
+                    let remaining = max(0.05, interval - Date().timeIntervalSince(cycleStart))
+                    let sleep = Task<Void, Never> { do { try await Task.sleep(for: .seconds(remaining)) } catch {} }
+                    self?.sleepTask = sleep
                     await sleep.value
                 }
             } catch is CancellationError { }
-            catch { if let self, current == self.revision { self.connectionError = error.localizedDescription; self.isLoading = false; self.publishSnapshot() } }
+            catch { if let self, current == self.revision { self.connectionError = ConnectionFailure.map(error).localizedDescription; self.isLoading = false; self.publishSnapshot() } }
         }
     }
     var widgetSnapshot: WidgetSnapshot {
@@ -262,12 +293,23 @@ struct MetricSample: Identifiable {
             return
         }
         guard persistSelection, Bundle.main.bundleURL.pathExtension == "app" else { return }
-        do {
-            try WidgetSnapshotStore.save(snapshot)
-            widgetError = nil
-            if widgetReloadPolicy.shouldReload(snapshot, force: force) { WidgetCenter.shared.reloadAllTimelines() }
-        } catch { widgetError = "Не удалось сохранить снимок виджета: \(error.localizedDescription)" }
+        widgetSequence += 1
+        let sequence = widgetSequence
+        let requestReload = widgetReloadPolicy.shouldReload(snapshot, force: force)
+        widgetReloadPending = widgetReloadPending || requestReload
+        let writer = snapshotWriter
+        widgetPublishTask?.cancel()
+        widgetPublishTask = Task { [weak self] in
+            do {
+                try await writer.save(snapshot, sequence: sequence)
+                guard let self, !Task.isCancelled, self.widgetSequence == sequence else { return }
+                self.widgetError = nil
+                if self.widgetReloadPending { WidgetCenter.shared.reloadAllTimelines(); self.widgetReloadPending = false }
+            } catch is CancellationError { }
+            catch { if let self, self.widgetSequence == sequence { self.widgetError = "Не удалось сохранить снимок виджета: \(error.localizedDescription)" } }
+        }
     }
+
     func refresh() {
         if isDemo { lastUpdated = Date() } else { sleepTask?.cancel() }
     }
@@ -315,7 +357,7 @@ struct MetricSample: Identifiable {
         guard !loadingTopology else { return }
         if isDemo {
             networkInterfaces = [.init(iface: "vmbr0", type: "bridge", active: 1), .init(iface: "vmbr1", type: "bridge", active: 1), .init(iface: "awg0", type: "tunnel", active: 1)]
-            tunnelMeasurements["awg0"] = try? JSONDecoder().decode(TunnelMeasurement.self, from: Data(#"{"peer":"203.0.113.10","pingMS":24.7,"receiveBps":128000,"transmitBps":42000}"#.utf8))
+            tunnelMeasurements["awg0"] = .init(peer: "203.0.113.10", pingMS: 24.7, receiveBps: 128000, transmitBps: 42000)
             for guest in node.guests { topologyGuestAddresses[MonitoringRules.guestKey(guest)] = ["192.168.31.\(guest.id)"] }
             return
         }
@@ -333,16 +375,25 @@ struct MetricSample: Identifiable {
         guard current == revision, !Task.isCancelled else { return }
         if topologyAddressDate == nil || Date().timeIntervalSince(topologyAddressDate!) > 45 {
             let guests = node.guests.filter { $0.node == node.id && $0.running }
-            let addresses = await withTaskGroup(of: (String, [String], String?).self) { group in
-                for guest in guests {
-                    group.addTask {
-                        do { return (MonitoringRules.guestKey(guest), try await service.guestAddresses(guest, primaryFirst: true), nil) }
-                        catch { return (MonitoringRules.guestKey(guest), [], error.localizedDescription) }
+            var addresses: [(String, [String], String?)] = []
+            // Reserve capacity for live telemetry; large fleets must not enqueue one request per VM.
+            for start in stride(from: 0, to: guests.count, by: 2) {
+                guard current == revision, !Task.isCancelled else { return }
+                let batch = Array(guests[start..<min(start+2, guests.count)])
+                let values = await withTaskGroup(of: (String, [String], String?).self) { group in
+                    for guest in batch {
+                        group.addTask {
+                            do {
+                                let values = try await PollDeadline.run(seconds: 3) { try await service.guestAddresses(guest, primaryFirst: true) }
+                                return (MonitoringRules.guestKey(guest), values, nil)
+                            } catch { return (MonitoringRules.guestKey(guest), [], error.localizedDescription) }
+                        }
                     }
+                    var result: [(String, [String], String?)] = []
+                    for await value in group { result.append(value) }
+                    return result
                 }
-                var result: [(String, [String], String?)] = []
-                for await value in group { result.append(value) }
-                return result
+                addresses += values
             }
             guard current == revision, !Task.isCancelled else { return }
             topologyGuestAddresses = [:]; topologyAddressErrors = [:]
@@ -442,5 +493,5 @@ struct MetricSample: Identifiable {
         }
         return history.map { metric == 0 ? $0.cpu : metric == 1 ? $0.ram : $0.disk }
     }
-    func stop() { pollTask?.cancel(); sleepTask?.cancel(); offlineTask?.cancel(); diagnosticTask?.cancel(); operationTasks.values.forEach { $0.cancel() }; revision += 1 }
+    func stop() { topologyTask?.cancel(); widgetPublishTask?.cancel(); addressTask?.cancel(); pollTask?.cancel(); sleepTask?.cancel(); offlineTask?.cancel(); diagnosticTask?.cancel(); operationTasks.values.forEach { $0.cancel() }; revision += 1 }
 }

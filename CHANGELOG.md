@@ -1,5 +1,25 @@
 # Changelog
 
+## v0.2.3 — 2026-10-22
+
+Universal macOS 14+, build 17 (arm64 + x86_64).
+
+### Новое в v0.2.3 · build 17
+
+- **API Token без UUID-ограничения.** При добавлении и редактировании подходит любой непустой Secret; окружающие пробелы убираются. «Проверить соединение» и «Сохранить» доступны при заполненной форме. Пустое поле при редактировании сохраняет существующий секрет в Keychain, а неверные учётные данные показывают ответ 401 от Proxmox.
+- **Домены и reverse proxy.** HTTPS без явного порта использует 443; указанный порт, префикс `/pve` и завершающий слэш обрабатываются корректно. Insecure SSL работает для IP и доменов. Ошибки DNS, SSL, таймаута/недоступности и авторизации имеют понятные сообщения.
+- **Надёжнее автообновление.** Реальные проценты, скачанные/общие MB и скорость загрузки, отмена и проверка SHA-256. Отдельный фоновый скрипт ждёт завершения приложения, устанавливает проверенный бандл с откатом и запускает его снова. При ошибке подготовки можно открыть скачанный DMG вручную.
+- **Отзывчивый интерфейс.** Сеть, декодирование JSON и запись виджетного кэша выполняются вне главного UI-потока. Зависшие циклы опроса отменяются, подробная телеметрия собирается ограниченными пакетами, устаревшие задачи не перезаписывают выбранный профиль. Упрощён поиск ближайшей точки на графиках; неактивная топология приостанавливает анимацию.
+- **Резервный LAN-адрес.** Необязательный локальный HTTPS URL в профиле и быстрое переключение LAN/External в сайдбаре без повторного ввода секрета.
+
+### New in v0.2.3 · build 17
+
+- **API tokens without UUID restrictions.** Add and edit profiles accept any nonempty secret, trimming surrounding whitespace. Test Connection and Save remain available for a complete form. Leaving the secret blank while editing preserves the existing Keychain credential; invalid credentials display Proxmox’s 401 response.
+- **Domains and reverse proxies.** HTTPS without an explicit port uses 443; explicit ports, `/pve` path prefixes and trailing slashes are handled correctly. Insecure SSL supports both IP addresses and domains. DNS, SSL, timeout/connectivity and authentication errors have actionable messages.
+- **More reliable updates.** Real percentages, downloaded/total MB and transfer speed, cancellation and SHA-256 verification. A separate background script waits for the app to exit, installs the verified bundle with rollback and relaunches it. A downloaded DMG can be opened manually if handoff preparation fails.
+- **Responsive UI.** Networking, JSON decoding and widget cache writes stay off the main UI thread. Stalled poll cycles are cancelled, detailed telemetry is collected in bounded batches, and obsolete tasks cannot overwrite the selected profile. Chart hover sample lookup is cheaper; inactive topology animation pauses.
+- **LAN fallback address.** An optional local HTTPS URL in each profile and a quick LAN/External sidebar switch, without reentering the secret.
+
 ## v0.2.2 — 2026-10-21
 
 Universal macOS 14+, build 16.

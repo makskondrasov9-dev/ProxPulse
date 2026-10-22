@@ -23,8 +23,14 @@ final class DiagnosticEngineTests: XCTestCase {
         XCTAssertEqual(DiskItem(id: "zero", name: "zero", capacityGB: 0, usedGB: 1).fraction, 0)
     }
     func testRejectsUnsafeEndpointsBeforeReadingCredentials() {
-        for endpoint in ["http://pve.local:8006", "https://user:pass@pve.local", "https://pve.local/?token=secret", "https://pve.local/api2"] {
+        for endpoint in ["http://pve.local:8006", "https://user:pass@pve.local", "https://pve.local/?token=secret"] {
             XCTAssertThrowsError(try ProxmoxAPIService(profile: .init(name: "test", endpoint: URL(string: endpoint)!, tokenID: "test")))
         }
     }
+    func testProxyPortsAndPrefixes() throws {
+        XCTAssertNil(try ProfileValidation.endpoint("https://pve.example.com/pve/").port)
+        XCTAssertEqual(try ProfileValidation.endpoint("https://pve.example.com/pve/").path, "/pve")
+        XCTAssertEqual(try ProfileValidation.endpoint("https://pve.example.com:8006").port, 8006)
+    }
+
 }

@@ -81,6 +81,9 @@ struct DashboardView: View {
                 T("WORKSPACE").font(.system(size: 9, weight: .semibold)).tracking(1.8).foregroundStyle(.tertiary)
                 Picker(L10n.text("Сервер", language: language), selection: $model.selectedProfile) { T("DEMO (Mock-данные)").tag(DashboardModel.demoID); ForEach(model.profiles) { T($0.name).tag($0.id) } }
                     .labelsHidden().pickerStyle(.menu).controlSize(.large)
+                if model.profiles.first(where: { $0.id == model.selectedProfile })?.localEndpoint != nil {
+                    Button { model.selectConnection(local: !model.usingLAN) } label: { TL(model.usingLAN ? "Внешний адрес" : "Использовать LAN", systemImage: "network").font(.caption) }.buttonStyle(.plain)
+                }
                 Button { model.showAddServer = true } label: { TL("Подключить сервер", systemImage: "plus.circle").font(.system(size: 11, weight: .medium)) }.buttonStyle(.plain).foregroundStyle(accent.uiColor)
             }
             VStack(spacing: 5) {

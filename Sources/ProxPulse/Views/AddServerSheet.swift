@@ -10,6 +10,7 @@ struct AddServerSheet: View {
         self.model = model; self.existing = existing
         if let existing {
             _name = State(initialValue: existing.name); _address = State(initialValue: existing.endpoint.absoluteString)
+            _localAddress = State(initialValue: existing.localEndpoint?.absoluteString ?? "")
             _auth = State(initialValue: existing.authMode); _insecure = State(initialValue: existing.allowInsecureSSL)
             let parts = existing.tokenID.split(separator: "!", maxSplits: 1).map(String.init)
             _user = State(initialValue: parts.first ?? "root@pam")
@@ -21,18 +22,24 @@ struct AddServerSheet: View {
             _vpnInterface = State(initialValue: existing.externalTunnel?.interface ?? "awg0")
         }
     }
-    private var preservesSecret: Bool { secret.isEmpty && existing?.authMode == auth }
-    private func connectionSecret() throws -> String {
-        if preservesSecret { return try KeychainManager.token(for: profileID) }
-        return secret
+    private var enteredSecret: String { auth == .apiToken ? secret.trimmingCharacters(in: .whitespacesAndNewlines) : secret }
+    private var preservesSecret: Bool { enteredSecret.isEmpty && hasStoredSecret && existing?.authMode == auth }
+    private func connectionSecret() async throws -> String {
+        if preservesSecret {
+            let id = profileID
+            return try await Task.detached(priority: .userInitiated) { try KeychainManager.token(for: id) }.value
+        }
+        return enteredSecret
     }
     @Environment(\.dismiss) private var dismiss
     @State private var name = "Homelab"
     @State private var address = "https://proxmox.local:8006"
+    @State private var localAddress = ""
     @State private var auth: AuthenticationMode = .password
     @State private var user = "root@pam"
     @State private var tokenName = "proxpulse"
     @State private var secret = ""
+    @State private var hasStoredSecret = false
     @State private var insecure = true
     @State private var vpnEnabled = false
     @State private var vpnName = "AmneziaWG"
@@ -44,15 +51,16 @@ struct AddServerSheet: View {
     @State private var failure: String?
     @State private var task: Task<Void, Never>?
     @State private var profileID = UUID()
-    private var fingerprint: String { [name, address, auth.rawValue, user, tokenName, secret, String(insecure), String(vpnEnabled), vpnName, vpnAddress, vpnInterface].joined(separator: "\u{1F}") }
+    private var fingerprint: String { [name, address, localAddress, auth.rawValue, user, tokenName, secret, String(insecure), String(vpnEnabled), vpnName, vpnAddress, vpnInterface].joined(separator: "\u{1F}") }
     private var validationMessage: String? {
+        if !localAddress.isEmpty && (try? ProfileValidation.endpoint(localAddress)) == nil { return "Укажите корректный локальный HTTPS адрес." }
         if vpnEnabled && !externalTunnel.isValid { return "Укажите корректные имя, IP и интерфейс VPN." }
         if name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty { return "Укажите имя кластера." }
         if (try? ProfileValidation.endpoint(address)) == nil { return "Укажите HTTPS URL или IP сервера, например 192.168.1.228:8006." }
         if ProfileValidation.username(user, mode: auth) == nil { return auth == .password ? "Введите логин, например root или root@pam." : "Введите пользователя с realm, например monitor@pve." }
         if auth == .apiToken {
             if tokenName.isEmpty || !tokenName.allSatisfy({ $0.isLetter || $0.isNumber || "-_.".contains($0) }) { return "Укажите Token ID: буквы, цифры, точка, дефис или подчёркивание." }
-            if !preservesSecret && UUID(uuidString: secret) == nil { return "Введите Secret API-токена в формате UUID." }
+            if enteredSecret.isEmpty && !preservesSecret { return "Введите Secret API-токена." }
         } else if secret.isEmpty && !preservesSecret { return "Введите пароль Proxmox." }
         return nil
     }
@@ -60,6 +68,7 @@ struct AddServerSheet: View {
     private func profile() throws -> ServerProfile {
         guard valid else { throw ProxmoxError.invalidResponse }
         var value = ServerProfile(id: profileID, name: name.trimmingCharacters(in: .whitespacesAndNewlines), endpoint: try ProfileValidation.endpoint(address), tokenID: auth == .apiToken ? ProfileValidation.username(user, mode: auth)! + "!" + tokenName : ProfileValidation.username(user, mode: auth)!, allowInsecureSSL: insecure, authentication: auth)
+        value.localEndpoint = localAddress.isEmpty ? nil : try ProfileValidation.endpoint(localAddress)
         value.externalTunnel = vpnEnabled ? externalTunnel : nil
         return value
     }
@@ -74,23 +83,25 @@ struct AddServerSheet: View {
             }
             ScrollView { VStack(alignment: .leading, spacing: 16) {
                 field("ИМЯ КЛАСТЕРА") { LTextField("Homelab", text: $name) }
-                field("URL / IP СЕРВЕРА") { LTextField("https://proxmox.local:8006", text: $address).onChange(of: address) { insecure = ProfileValidation.isLocal(address) } }
+                field("URL / IP СЕРВЕРА") { LTextField("https://proxmox.local:8006", text: $address).onChange(of: address) { insecure = ProfileValidation.isLocal(address) }.accessibilityIdentifier("profile.address") }
+                field("Локальный резервный адрес (LAN IP)") { LTextField("https://192.168.1.228:8006", text: $localAddress) }
+                T("Без порта: HTTPS 443. Явный порт и префикс /pve сохраняются.").font(.caption).foregroundStyle(.secondary)
                 Picker(L10n.text("Авторизация", language: language), selection: $auth) { T("API Token").tag(AuthenticationMode.apiToken); T("Логин и пароль").tag(AuthenticationMode.password) }.pickerStyle(.segmented)
                 if auth == .apiToken {
                     HStack(spacing: 14) {
-                        field("USER@REALM") { LTextField("monitor@pve", text: $user) }
-                        field("TOKEN ID") { LTextField("proxpulse", text: $tokenName) }
+                        field("USER@REALM") { LTextField("monitor@pve", text: $user).accessibilityIdentifier("profile.user") }
+                        field("TOKEN ID") { LTextField("proxpulse", text: $tokenName).accessibilityIdentifier("profile.token") }
                     }
-                    field("SECRET UUID") { LSecureField("xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx", text: $secret) }
+                    field("SECRET") { LSecureField(existing != nil ? "Оставьте пустым, чтобы сохранить текущий" : "Секрет API-токена", text: $secret).accessibilityIdentifier("profile.secret") }
                 } else {
                     field("ЛОГИН") { LTextField("root или root@pam", text: $user) }
                     T("Если realm не указан, используется @pam.").font(.system(size: 10)).foregroundStyle(.secondary)
-                    field("ПАРОЛЬ") { LSecureField("Пароль Proxmox", text: $secret) }
+                    field("ПАРОЛЬ") { LSecureField(existing != nil ? "Оставьте пустым, чтобы сохранить текущий" : "Пароль Proxmox", text: $secret).accessibilityIdentifier("profile.secret") }
                 }
                 Toggle(isOn: $insecure) {
                     VStack(alignment: .leading, spacing: 4) {
                         T("Разрешить самоподписанный SSL").font(.system(size: 12, weight: .medium))
-                        T("Для локального сервера. Проверка сертификата этого подключения будет отключена.").font(.system(size: 10)).foregroundStyle(.secondary)
+                        T("Для этого IP или домена. Проверка цепочки сертификата подключения будет отключена.").font(.system(size: 10)).foregroundStyle(.secondary)
                     }
                 }.toggleStyle(.switch).controlSize(.small)
             }.disabled(testing).padding(20).background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 18)) }.frame(maxHeight: vpnEnabled ? 340 : 460)
@@ -115,14 +126,32 @@ struct AddServerSheet: View {
             HStack {
                 LB("Отмена") { task?.cancel(); dismiss() }.keyboardShortcut(.cancelAction)
                 Spacer()
-                LB("Проверить соединение") { test(connect: false) }.disabled(!valid || testing)
+                LB("Проверить соединение") { test(connect: false) }.disabled(!valid || testing).accessibilityIdentifier("profile.test")
+                    .background { profileButtonFrame("test") }
                 LB(existing == nil ? "Подключиться" : "Сохранить") { test(connect: true) }
-                    .buttonStyle(.borderedProminent).disabled(!valid || testing).keyboardShortcut(.defaultAction)
+                    .buttonStyle(.borderedProminent).disabled(!valid || testing).keyboardShortcut(.defaultAction).accessibilityIdentifier("profile.save")
+                    .background { profileButtonFrame("save") }
 
             }
         }.padding(26).frame(width: 640)
+        #if DEBUG
+        .modifier(ProfileFormDebugModifier(enabled: valid && !testing, preservesSecret: preservesSecret, failure: failure,
+            configure: { newAddress, mode, value in address = newAddress; auth = mode; secret = value }))
+        #endif
+        .task(id: profileID) {
+            guard existing != nil else { return }
+            let id = profileID
+            let available = await Task.detached(priority: .utility) { (try? KeychainManager.token(for: id).isEmpty == false) ?? false }.value
+            guard !Task.isCancelled else { return }
+            hasStoredSecret = available
+        }
         .onChange(of: fingerprint) { task?.cancel(); testing = false; check = nil; failure = nil }
         .onDisappear { task?.cancel() }
+    }
+    @ViewBuilder private func profileButtonFrame(_ key: String) -> some View {
+        #if DEBUG
+        GeometryReader { geometry in Color.clear.preference(key: ProfileFormFrames.self, value: [key: geometry.frame(in: .named("profile-form"))]) }
+        #endif
     }
     private func field<Content: View>(_ title: String, @ViewBuilder content: () -> Content) -> some View {
         VStack(alignment: .leading, spacing: 7) {
@@ -138,21 +167,21 @@ struct AddServerSheet: View {
             do {
                 let connection = try profile()
                 if !alreadyChecked {
-                    let api = try ProxmoxAPIService(profile: connection, secret: try connectionSecret())
+                    let api = try ProxmoxAPIService(profile: connection, secret: try await connectionSecret())
                     let result = try await api.testConnection()
                     guard !Task.isCancelled, input == fingerprint else { return }
                     check = result
                 }
                 guard !Task.isCancelled, input == fingerprint else { return }
                 if connect {
-                    if existing != nil { try model.updateProfile(connection, secret: preservesSecret ? nil : secret) }
-                    else { try model.addProfile(connection, secret: secret) }
+                    if existing != nil { try await model.updateProfile(connection, secret: preservesSecret ? nil : enteredSecret) }
+                    else { try await model.addProfile(connection, secret: enteredSecret) }
                     dismiss()
                 }
                 testing = false
             } catch {
                 guard !Task.isCancelled, input == fingerprint else { return }
-                failure = error.localizedDescription; testing = false
+                failure = ConnectionFailure.map(error).localizedDescription; testing = false
             }
         }
     }

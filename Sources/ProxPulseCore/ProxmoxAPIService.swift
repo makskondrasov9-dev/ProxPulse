@@ -7,7 +7,7 @@ public enum ProxmoxError: Error, LocalizedError {
         switch self {
         case .invalidEndpoint: "Требуется HTTPS URL сервера без query и fragment."
         case .missingToken: "Учётные данные отсутствуют в Keychain."
-        case .http(401): "Авторизация отклонена (HTTP 401). Проверьте логин, realm и пароль или API Token."
+        case .http(401): "Неверный логин, пароль или API токен (HTTP 401)."
         case .http(403): "Недостаточно прав API (HTTP 403). Проверьте разрешения пользователя и API Token."
         case .http(let code): "Proxmox API: HTTP \(code)."
         case .keychain(let status): "Ошибка Keychain: \(status)."
@@ -52,7 +52,7 @@ private final class ServerTrustDelegate: NSObject, URLSessionTaskDelegate, Senda
     let allowInsecure: Bool
     init(host: String, allowInsecure: Bool) { self.host = host; self.allowInsecure = allowInsecure }
     func urlSession(_ session: URLSession, didReceive challenge: URLAuthenticationChallenge, completionHandler: @escaping @Sendable (URLSession.AuthChallengeDisposition, URLCredential?) -> Void) {
-        if allowInsecure, challenge.protectionSpace.host == host,
+        if allowInsecure, challenge.protectionSpace.host.lowercased() == host.lowercased(),
            challenge.protectionSpace.authenticationMethod == NSURLAuthenticationMethodServerTrust,
            let trust = challenge.protectionSpace.serverTrust {
             completionHandler(.useCredential, URLCredential(trust: trust))
@@ -111,17 +111,23 @@ public actor ProxmoxAPIService {
     private let suppliedSecret: String?
     private var configCache: [String: (Date, GuestConfiguration)] = [:]
     private var networkSampler = GuestNetworkSampler()
+    private var guestTelemetryCache: [String: Guest] = [:]
+    private var guestCursor = 0
+    private var snapshotNodes: (date: Date, names: [String])?
     private var ticket: String?
     private var csrf: String?
     private var ticketDate: Date?
     public init(profile: ServerProfile, secret: String? = nil, configuration: URLSessionConfiguration = .ephemeral) throws {
-        guard let c = URLComponents(url: profile.endpoint, resolvingAgainstBaseURL: false), c.scheme == "https", let host = c.host, c.user == nil, c.password == nil, c.query == nil, c.fragment == nil, c.path.isEmpty || c.path == "/" else { throw ProxmoxError.invalidEndpoint }
+        let endpoint = try ProfileValidation.endpoint(profile.endpoint.absoluteString)
+        guard let host = endpoint.host else { throw ProxmoxError.invalidEndpoint }
         self.profile = profile; suppliedSecret = secret
         configuration.timeoutIntervalForRequest = 15
         configuration.timeoutIntervalForResource = 25
         configuration.httpShouldSetCookies = false
+        configuration.httpMaximumConnectionsPerHost = 6
         session = URLSession(configuration: configuration, delegate: ServerTrustDelegate(host: host, allowInsecure: profile.allowInsecureSSL), delegateQueue: nil)
     }
+    deinit { session.invalidateAndCancel() }
     private struct Envelope<T: Decodable>: Decodable { var data: T }
     private struct TicketResponse: Decodable {
         var ticket: String?
@@ -137,9 +143,12 @@ public actor ProxmoxAPIService {
         return c.url!
     }
     private func decode<T: Decodable & Sendable>(_ request: URLRequest, as: T.Type) async throws -> T {
-        let (data, response) = try await session.data(for: request)
+        let data: Data, response: URLResponse
+        do { (data, response) = try await session.data(for: request) }
+        catch { throw ConnectionFailure.map(error) }
         guard let http = response as? HTTPURLResponse else { throw ProxmoxError.invalidResponse }
         guard (200..<300).contains(http.statusCode) else { throw ProxmoxError.http(http.statusCode) }
+        assert(!Thread.isMainThread, "Blocking parsing/cache/file work must stay off MainActor")
         return try JSONDecoder().decode(Envelope<T>.self, from: data).data
     }
     private func authenticate() async throws {
@@ -159,6 +168,7 @@ public actor ProxmoxAPIService {
         ticket = value; csrf = prevention; ticketDate = Date()
     }
     private func request<T: Decodable & Sendable>(_ path: [String], method: String = "GET", query: [URLQueryItem] = [], form: [String: String] = [:], as: T.Type, retry: Bool = true) async throws -> T {
+        try Task.checkCancellation()
         try Task.checkCancellation()
         try await authenticate()
         try Task.checkCancellation()
@@ -195,45 +205,70 @@ public actor ProxmoxAPIService {
         _ = try await request(["nodes", first, "storage"], as: [StorageStatus].self)
         return ConnectionCheck(nodes: available, milliseconds: Int(Date().timeIntervalSince(start) * 1000))
     }
-    public func snapshot(node preferred: String? = nil) async throws -> LiveSnapshot {
-        let available = try await nodes()
+    public func snapshot(node preferred: String? = nil, detailDeadline: Date? = nil) async throws -> LiveSnapshot {
+        let cycleStart = Date()
+        let available: [String]
+        if let cached = snapshotNodes, Date().timeIntervalSince(cached.date) < 30 { available = cached.names }
+        else { available = try await nodes(); snapshotNodes = (.now, available) }
         guard let name = preferred.flatMap({ available.contains($0) ? $0 : nil }) ?? available.first else { throw ProxmoxError.noNodes }
-        let status = try await request(["nodes", name, "status"], as: NodeStatus.self)
-        let resources = try await resources()
-        let storage = try await request(["nodes", name, "storage"], as: [StorageStatus].self)
-        var node = LiveDataAdapter.snapshot(name: name, status: status, resources: resources, storage: storage)
+        async let status = request(["nodes", name, "status"], as: NodeStatus.self)
+        async let resources = resources()
+        async let storage = request(["nodes", name, "storage"], as: [StorageStatus].self)
+        let values = try await (status, resources, storage)
+        var node = LiveDataAdapter.snapshot(name: name, status: values.0, resources: values.1, storage: values.2)
         let guests = node.guests
-        // Bounded fan-out keeps large clusters from saturating pveproxy. A denied guest must not blank the dashboard.
-        for start in stride(from: 0, to: guests.count, by: 4) {
-            let batch = Array(guests[start..<min(start + 4, guests.count)])
-            let results = await withTaskGroup(of: (Guest, GuestStatus?, GuestConfiguration?, String?, Date).self) { group in
-                for guest in batch {
-                    group.addTask {
-                        do {
-                            let status = try await self.guestStatus(guest)
-                            let config = try? await self.guestConfiguration(guest)
-                            return (guest, status, config, nil, Date())
-                        }
-                        catch { return (guest, nil, nil, error.localizedDescription, Date()) }
-                    }
-                }
-                var result: [(Guest, GuestStatus?, GuestConfiguration?, String?, Date)] = []
-                for await item in group { result.append(item) }
-                return result
+        let activeKeys = Set(guests.map(MonitoringRules.guestKey))
+        configCache = configCache.filter { activeKeys.contains($0.key) }
+        guestTelemetryCache = guestTelemetryCache.filter { activeKeys.contains($0.key) }
+        let offset = guests.isEmpty ? 0 : guestCursor % guests.count
+        let ordered = Array(guests.dropFirst(offset)) + Array(guests.prefix(offset))
+        if let deadline = detailDeadline {
+            let remaining = deadline.timeIntervalSinceNow
+            if remaining > 0.05 {
+                do { try await PollDeadline.run(seconds: remaining) { try await self.collectGuestDetails(ordered) } }
+                catch { try Task.checkCancellation() } // A slow guest must not discard a valid node snapshot.
             }
-            try Task.checkCancellation()
-            for (guest, status, config, error, date) in results {
-                guard let index = node.guests.firstIndex(where: { MonitoringRules.guestKey($0) == MonitoringRules.guestKey(guest) }) else { continue }
-                if let status {
-                    node.guests[index] = networkSampler.apply(status, to: guest, date: date)
-                    node.guests[index].osType = config?.osType
-                    node.guests[index].bridges = config?.bridges
-                }
-                else { networkSampler.invalidate(guest); node.guests[index].telemetryError = error }
+        } else { try await collectGuestDetails(ordered) }
+        try Task.checkCancellation()
+        node.guests = guests.map { base in
+            guard var cached = guestTelemetryCache[MonitoringRules.guestKey(base)] else { return base }
+            cached.name = base.name
+            if (cached.telemetryDate ?? .distantPast) < cycleStart {
+                cached.running = base.running; cached.cpu = base.cpu; cached.memoryGB = base.memoryGB; cached.maxMemoryGB = base.maxMemoryGB
             }
+            if !cached.running { cached.cpu = 0; cached.memoryGB = 0; cached.receiveBps = 0; cached.transmitBps = 0; cached.uptimeSeconds = 0 }
+            return cached
         }
         networkSampler.retain(node.guests)
         return LiveSnapshot(node: node, nodes: available)
+    }
+    private func collectGuestDetails(_ guests: [Guest]) async throws {
+        for start in stride(from: 0, to: guests.count, by: 4) {
+            try Task.checkCancellation()
+            let batch = Array(guests[start..<min(start+4, guests.count)])
+            guestCursor += batch.count
+            await withTaskGroup(of: Void.self) { group in
+                for guest in batch { group.addTask { await self.refreshGuestDetail(guest) } }
+            }
+        }
+    }
+    private func refreshGuestDetail(_ guest: Guest) async {
+        let key = MonitoringRules.guestKey(guest)
+        do {
+            let status = try await guestStatus(guest)
+            let sampledAt = Date()
+            let config = try? await guestConfiguration(guest)
+            var value = networkSampler.apply(status, to: guest, date: sampledAt)
+            value.osType = config?.osType ?? guestTelemetryCache[key]?.osType
+            value.bridges = config?.bridges ?? guestTelemetryCache[key]?.bridges
+            guestTelemetryCache[key] = value
+        } catch {
+            guard !Task.isCancelled else { return }
+            networkSampler.invalidate(guest)
+            var value = guestTelemetryCache[key] ?? guest
+            value.telemetryError = error.localizedDescription
+            guestTelemetryCache[key] = value
+        }
     }
     public func guestStatus(_ guest: Guest) async throws -> GuestStatus {
         try await request(["nodes", guest.node, guest.kind.rawValue, String(guest.id), "status", "current"], as: GuestStatus.self)

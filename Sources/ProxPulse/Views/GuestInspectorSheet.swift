@@ -173,14 +173,15 @@ struct InspectorHistoryChart: View {
             .overlay(RoundedRectangle(cornerRadius: 15).stroke(.white.opacity(0.09)))
     }
     private var chart: some View {
-        Chart(samples) { sample in
+        let selection = selected
+        return Chart(samples) { sample in
             if let number = value(sample) {
                 AreaMark(x: .value("Time", sample.date), yStart: .value("Zero", 0), yEnd: .value(unit, number))
                     .foregroundStyle(LinearGradient(colors: [color.opacity(0.22), color.opacity(0.015)], startPoint: .top, endPoint: .bottom)).interpolationMethod(.catmullRom)
                 LineMark(x: .value("Time", sample.date), y: .value(unit, number))
                     .foregroundStyle(color).lineStyle(.init(lineWidth: 1.8)).interpolationMethod(.catmullRom)
             }
-            if let selected, selected.id == sample.id, let metric = value(selected) {
+            if let selected = selection, selected.id == sample.id, let metric = value(selected) {
                 RuleMark(x: .value("Selected", selected.date)).foregroundStyle(color.opacity(0.4)).lineStyle(.init(lineWidth: 1, dash: [3, 3]))
                 PointMark(x: .value("Selected", selected.date), y: .value(unit, metric)).foregroundStyle(color).symbolSize(27)
             }
@@ -206,7 +207,10 @@ struct InspectorHistoryChart: View {
                             guard let plot = proxy.plotFrame else { return }
                             let frame = geometry[plot]
                             guard frame.contains(location) else { hovered = nil; return }
-                            hovered = proxy.value(atX: location.x - frame.minX, as: Date.self)
+                            if let date = proxy.value(atX: location.x - frame.minX, as: Date.self) {
+                                let nearest = samples.min { abs($0.date.timeIntervalSince(date)) < abs($1.date.timeIntervalSince(date)) }?.date
+                                if hovered != nearest { hovered = nearest }
+                            }
                             #if DEBUG
                             InspectorHoverProbe.selected = hovered != nil
                             #endif

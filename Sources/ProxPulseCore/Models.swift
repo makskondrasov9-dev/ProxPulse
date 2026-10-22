@@ -10,6 +10,7 @@ public struct ServerProfile: Identifiable, Codable, Hashable, Sendable {
     public var tokenID: String
     public var allowInsecureSSL: Bool
     public var externalTunnel: ExternalTunnel? = nil
+    public var localEndpoint: URL? = nil
     public var authentication: AuthenticationMode?
     public var authMode: AuthenticationMode { authentication ?? .apiToken }
     public init(id: UUID = UUID(), name: String, endpoint: URL, tokenID: String, allowInsecureSSL: Bool = false, authentication: AuthenticationMode = .apiToken) {

@@ -5,7 +5,7 @@ cd "$(dirname "$0")/.."
 source scripts/swift-environment.sh
 swift build "${package_flags[@]}"
 BINARY_DIR="$(swift build --show-bin-path)"
-swiftc -swift-version 6 -parse-as-library "${compiler_flags[@]}" -I "$BINARY_DIR/Modules" scripts/check-core.swift scripts/APIFixtureChecks.swift scripts/Sprint3Checks.swift scripts/Sprint4Checks.swift scripts/Sprint5Checks.swift scripts/Sprint51Checks.swift scripts/Sprint6Checks.swift "$BINARY_DIR"/ProxPulseCore.build/*.swift.o -o .build/check-core
+swiftc -swift-version 6 -parse-as-library "${compiler_flags[@]}" -I "$BINARY_DIR/Modules" scripts/check-core.swift scripts/APIFixtureChecks.swift scripts/Sprint3Checks.swift scripts/Sprint4Checks.swift scripts/Sprint5Checks.swift scripts/Sprint51Checks.swift scripts/Sprint6Checks.swift scripts/Sprint7Checks.swift "$BINARY_DIR"/ProxPulseCore.build/*.swift.o -o .build/check-core
 .build/check-core
 "$BINARY_DIR/ProxPulse" --verify-demo
 "$BINARY_DIR/ProxPulse" --verify-ui

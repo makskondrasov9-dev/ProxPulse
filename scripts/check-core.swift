@@ -17,7 +17,7 @@ import ProxPulseCore
         }
         check(MockDataProvider.node.storage)
         precondition(DiskItem(id: "zero", name: "zero", capacityGB: 0, usedGB: 1).fraction == 0)
-        for endpoint in ["http://pve.local:8006", "https://user:pass@pve.local", "https://pve.local/?token=secret", "https://pve.local/api2"] {
+        for endpoint in ["http://pve.local:8006", "https://user:pass@pve.local", "https://pve.local/?token=secret"] {
             do { _ = try ProxmoxAPIService(profile: .init(name: "test", endpoint: URL(string: endpoint)!, tokenID: "test")); fatalError("Unsafe URL accepted") }
             catch ProxmoxError.invalidEndpoint { }
         }
@@ -27,6 +27,8 @@ import ProxPulseCore
         try verifySprint5()
         verifySprint51()
         try verifySprint6()
+        try await verifySprint7()
+        try await verifyProgressiveTelemetry()
         try verifySprint4()
         try verifySprint3()
         try await verifyAPIFixtures()

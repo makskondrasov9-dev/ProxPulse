@@ -42,6 +42,9 @@ public struct TunnelMeasurement: Decodable, Sendable {
         self.peer = peer; self.pingMS = pingMS; self.reachable = reachable
         receiveBps = 0; transmitBps = 0; ratesAvailable = false
     }
+    public init(peer: String?, pingMS: Double?, receiveBps: Double, transmitBps: Double) {
+        self.peer = peer; self.pingMS = pingMS; self.receiveBps = receiveBps; self.transmitBps = transmitBps; reachable = true; ratesAvailable = true
+    }
     enum CodingKeys: String, CodingKey { case peer, pingMS, receiveBps, transmitBps, reachable, ratesAvailable }
 }
 public enum TrafficAnimation {

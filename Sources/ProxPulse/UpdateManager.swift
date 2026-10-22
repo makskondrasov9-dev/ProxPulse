@@ -3,14 +3,23 @@ import SwiftUI
 import CryptoKit
 import ProxPulseCore
 
+@MainActor private final class UpdateProgressRelay {
+    weak var manager: UpdateManager?
+    init(_ manager: UpdateManager) { self.manager = manager }
+    func update(_ progress: DownloadProgress) { manager?.downloadProgress = progress }
+}
 @MainActor @Observable final class UpdateManager {
+    var downloadProgress = DownloadProgress()
+    var downloadedDMG: URL?
+    private var transfer: Task<VerifiedUpdate, any Error>?
     var checking = false
     var installing = false
+    var preparingReplacement = false
     var release: AppRelease?
     var showRelease = false
     var status: String?
     var error: String?
-    let currentVersion = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "0.2.1"
+    let currentVersion = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "0.2.3"
     private var checkedAtLaunch = false
     func atLaunch() async {
         guard !checkedAtLaunch else { return }; checkedAtLaunch = true
@@ -22,54 +31,60 @@ import ProxPulseCore
         checking = true; error = nil; status = nil
         defer { checking = false }
         do {
-            var request = URLRequest(url: ReleaseUpdate.endpoint)
-            request.timeoutInterval = 20; request.cachePolicy = .reloadIgnoringLocalCacheData
-            request.setValue("application/vnd.github+json", forHTTPHeaderField: "Accept")
-            request.setValue("ProxPulse/" + currentVersion, forHTTPHeaderField: "User-Agent")
-            let (data, response) = try await URLSession.shared.data(for: request)
-            guard (response as? HTTPURLResponse)?.statusCode == 200, data.count <= 2_000_000 else { throw ReleaseUpdateError.invalidRelease }
-            let latest = try ReleaseUpdate.parse(data)
+            let version = currentVersion
+            let latest = try await Task.detached(priority: .utility) {
+                let configuration = URLSessionConfiguration.ephemeral
+                configuration.timeoutIntervalForRequest = 15; configuration.timeoutIntervalForResource = 25
+                let session = URLSession(configuration: configuration); defer { session.invalidateAndCancel() }
+                var request = URLRequest(url: ReleaseUpdate.endpoint)
+                request.cachePolicy = .reloadIgnoringLocalCacheData
+                request.setValue("application/vnd.github+json", forHTTPHeaderField: "Accept")
+                request.setValue("ProxPulse/" + version, forHTTPHeaderField: "User-Agent")
+                let (data, response) = try await session.data(for: request)
+                guard (response as? HTTPURLResponse)?.statusCode == 200, data.count <= 2_000_000 else { throw ReleaseUpdateError.invalidRelease }
+                return try ReleaseUpdate.parse(data)
+            }.value
             guard let installed = ReleaseVersion(currentVersion) else { throw ReleaseUpdateError.invalidRelease }
             release = latest.version > installed ? latest : nil
             if release != nil { showRelease = true } else { status = "Установлена последняя версия" }
         } catch { if !silent { self.error = "Не удалось проверить обновления. Повторите позже." } }
     }
+    func cancelDownload() { transfer?.cancel() }
+    func openDownloadedDMG() { if let downloadedDMG { NSWorkspace.shared.open(downloadedDMG) } }
     func install() async {
         guard let release, !installing else { return }
-        installing = true; error = nil; status = "Загрузка и проверка обновления…"
+        installing = true; error = nil; status = "Загрузка и проверка обновления…"; downloadProgress = .init()
+        defer { installing = false; preparingReplacement = false; transfer = nil }
         do {
-            let directory = FileManager.default.temporaryDirectory.appendingPathComponent("ProxPulse-update-" + UUID().uuidString)
-            try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
-            var handedOff = false
-            defer { if !handedOff { try? FileManager.default.removeItem(at: directory) } }
-            let (checksum, checksumResponse) = try await URLSession.shared.data(from: release.checksum)
-            guard (checksumResponse as? HTTPURLResponse)?.statusCode == 200, checksum.count < 4096 else { throw ReleaseUpdateError.invalidChecksum }
-            let expected = try ReleaseUpdate.expectedHash(checksum, filename: release.download.lastPathComponent)
-            let (temporary, response) = try await URLSession.shared.download(from: release.download)
-            guard (response as? HTTPURLResponse)?.statusCode == 200 else { throw ReleaseUpdateError.invalidRelease }
-            let file = directory.appendingPathComponent(release.download.lastPathComponent)
-            try FileManager.default.moveItem(at: temporary, to: file)
-            let actual = try await Task.detached(priority: .utility) {
-                let handle = try FileHandle(forReadingFrom: file); defer { try? handle.close() }
-                var hash = SHA256()
-                while let bytes = try handle.read(upToCount: 1024*1024), !bytes.isEmpty { hash.update(data: bytes) }
-                return hash.finalize().map { String(format: "%02x", $0) }.joined()
+            let relay = UpdateProgressRelay(self)
+            let task = Task.detached(priority: .utility) {
+                try await UpdatePackage.fetch(release) { progress in
+                    Task { @MainActor in relay.update(progress) }
+                }
+            }
+            transfer = task
+            let package = try await task.value
+            downloadedDMG = package.dmg; preparingReplacement = true
+            status = "Подготовка замены приложения…"
+            guard let installer = Bundle.main.url(forResource: "install", withExtension: "sh") else { throw CocoaError(.fileNoSuchFile) }
+            let pid = ProcessInfo.processInfo.processIdentifier
+            try await Task.detached(priority: .utility) {
+                let helper = try UpdateHandoff.prepare(package: package, installer: installer, parentPID: pid)
+                try await UpdateHandoff.launch(helper)
             }.value
-            guard actual == expected else { throw ReleaseUpdateError.invalidChecksum }
-            guard let bundledScript = Bundle.main.url(forResource: "install", withExtension: "sh") else { throw CocoaError(.fileNoSuchFile) }
-            // Copy the helper out of the bundle before replacing that bundle.
-            let helper = directory.appendingPathComponent("install.sh")
-            try FileManager.default.copyItem(at: bundledScript, to: helper)
-            let process = Process(); process.executableURL = URL(fileURLWithPath: "/bin/bash")
-            process.arguments = [helper.path, "--dmg", file.path, "--wait-pid", String(ProcessInfo.processInfo.processIdentifier)]
-            let log = directory.appendingPathComponent("install.log")
-            FileManager.default.createFile(atPath: log.path, contents: nil)
-            let output = try FileHandle(forWritingTo: log)
-            process.standardOutput = output; process.standardError = output; process.standardInput = FileHandle.nullDevice
-            try process.run(); handedOff = true
+            // Quit only after the child acknowledges startup. It then waits for this exact PID,
+            // stages and verifies the app, replaces it with rollback, and relaunches it.
             NSApplication.shared.terminate(nil)
-        } catch { self.error = "Обновление не установлено. Текущая версия сохранена."; status = nil; installing = false }
+        } catch is CancellationError {
+            status = "Загрузка отменена"
+        } catch let error as URLError where error.code == .cancelled {
+            status = "Загрузка отменена"
+        } catch {
+            self.error = "Обновление не установлено. Текущая версия сохранена. " + error.localizedDescription
+            status = nil
+        }
     }
+
 }
 
 struct UpdateSectionView: View {
@@ -107,7 +122,18 @@ struct UpdateSheet: View {
                 }
             }
             T("Приложение закроется и запустится после установки.").font(.caption).foregroundStyle(.secondary)
-            if manager.installing { HStack { ProgressView().controlSize(.small); T("Загрузка и проверка обновления…") } }
+            if manager.installing {
+                VStack(alignment: .leading, spacing: 8) {
+                    ProgressView(value: manager.downloadProgress.fraction)
+                    HStack {
+                        Text(String(format: "%.1f / %@ MB · %@ · %.1f MB/s", Double(manager.downloadProgress.received)/1_000_000, manager.downloadProgress.total.map { String(format: "%.1f", Double($0)/1_000_000) } ?? "—", manager.downloadProgress.fraction.map { String(format: "%.0f%%", $0*100) } ?? "—", manager.downloadProgress.bytesPerSecond/1_000_000)).font(.caption.monospacedDigit())
+                        Spacer()
+                        LB("Отменить загрузку") { manager.cancelDownload() }.disabled(manager.preparingReplacement)
+                    }
+                    T(manager.status ?? "Загрузка и проверка обновления…").font(.caption).foregroundStyle(.secondary)
+                }
+            }
+            if manager.error != nil && manager.downloadedDMG != nil { LB("Открыть скачанный DMG") { manager.openDownloadedDMG() } }
             if let error = manager.error { T(error).font(.caption).foregroundStyle(.orange) }
             HStack { LB("Позже") { dismiss() }.disabled(manager.installing); Spacer(); LB("Скачать и обновить") { Task { await manager.install() } }.buttonStyle(.borderedProminent).disabled(manager.installing) }
         }.padding(26).frame(width: 620, height: 600).background(.ultraThinMaterial)

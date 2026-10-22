@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		26020693B381333D17187AF7 /* Sprint7Verification.swift in Sources */ = {isa = PBXBuildFile; fileRef = 71CC8411C543736640578EBE /* Sprint7Verification.swift */; };
+		F9F10359CD7BE693CFC3ACA0 /* ProfileFormVerification.swift in Sources */ = {isa = PBXBuildFile; fileRef = 06B6991256E6A4689C51D809 /* ProfileFormVerification.swift */; };
 		00BF07A1FC0ABF6C102A3AAD /* CanvasScrollZoom.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7EA7FD30E9060BF73D541336 /* CanvasScrollZoom.swift */; };
 		023842E7CCE18D72FD05105D /* Localization.swift in Sources */ = {isa = PBXBuildFile; fileRef = 430AE7CC0C93D0248479E74B /* Localization.swift */; };
 		0394F4D645DC5C110335D18E /* TerminalLauncher.swift in Sources */ = {isa = PBXBuildFile; fileRef = 953F5E298D6908087C7C6023 /* TerminalLauncher.swift */; };
@@ -21,10 +23,12 @@
 		26F740EBE5CD67C47E933275 /* TopologyVerification.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81670A1407E88710A46C37F4 /* TopologyVerification.swift */; };
 		28AD52A7B0BEECC10F2E37D5 /* Sprint6Verification.swift in Sources */ = {isa = PBXBuildFile; fileRef = 563211C25E504D9625A82CAF /* Sprint6Verification.swift */; };
 		325F0CCAE76C01D3AAD5E91E /* GuestInspectorSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE7BB15896BEED6F880223B2 /* GuestInspectorSheet.swift */; };
+		3F0CDFBDDA37A30220533BB2 /* UpdateHandoff.swift in Sources */ = {isa = PBXBuildFile; fileRef = 259F5C102D2F9831D5E391CC /* UpdateHandoff.swift */; };
 		3FA6DBFED2CCAC1EBEABEC77 /* GuestTelemetry.swift in Sources */ = {isa = PBXBuildFile; fileRef = A4C4BC8552920E2AB38B4816 /* GuestTelemetry.swift */; };
 		41DE7741F09DDAA55D52DEBF /* TelemetryFormat.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1C17D2F939E66D1900375AC9 /* TelemetryFormat.swift */; };
 		4BD247DD10AD510690C357F6 /* GuestCreation.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA3D3B9E71BDF54343F274D5 /* GuestCreation.swift */; };
 		4EBD2508BC3D494E67AAF7E2 /* Sprint51Verification.swift in Sources */ = {isa = PBXBuildFile; fileRef = 408281E7347A7D4F389C9F80 /* Sprint51Verification.swift */; };
+		4FBB411D45A5D65559DCA097 /* ConnectionFailure.swift in Sources */ = {isa = PBXBuildFile; fileRef = 18F9BC6134014F8D90D24139 /* ConnectionFailure.swift */; };
 		5018A5DEAF2D2C3C2EB9798A /* RuntimeUIVerification.swift in Sources */ = {isa = PBXBuildFile; fileRef = 12FFE3B656365565346739DF /* RuntimeUIVerification.swift */; };
 		512C1CE55BDFDA12D4E6E103 /* QuickSearchOverlay.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48631CC18E9389CC0813A0A3 /* QuickSearchOverlay.swift */; };
 		539C1777774B0ECF2B6CF0C3 /* IncidentReport.swift in Sources */ = {isa = PBXBuildFile; fileRef = B906055943FB381D56723D8E /* IncidentReport.swift */; };
@@ -43,6 +47,7 @@
 		7DDC007D592AABEC33DF733A /* install.sh in Resources */ = {isa = PBXBuildFile; fileRef = E37684B61F4412DD0527E382 /* install.sh */; };
 		7EDF0600124E8D6013B26653 /* MenuBarPopover.swift in Sources */ = {isa = PBXBuildFile; fileRef = 52805E0B8D1D9657C450F937 /* MenuBarPopover.swift */; };
 		80EEA93E65A6E0DA64B1844A /* Preferences.swift in Sources */ = {isa = PBXBuildFile; fileRef = 06E54A719F704692C40C2387 /* Preferences.swift */; };
+		8132244C5050346A7EC09404 /* UpdateDownload.swift in Sources */ = {isa = PBXBuildFile; fileRef = 95101E8FAC3DA63D76CC8BE0 /* UpdateDownload.swift */; };
 		8B5DAFDD0960F5B07BEB9DEF /* AppIcon.icns in Resources */ = {isa = PBXBuildFile; fileRef = F0D53188D85CC277DDAC7315 /* AppIcon.icns */; };
 		96D8A08D740BA479CD0A6F9B /* PulseWidgetViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = B9043F35E2599B726B18333B /* PulseWidgetViews.swift */; };
 		9827BBC70251C94A6D431FA6 /* libProxPulseWidgetUI.a in Frameworks */ = {isa = PBXBuildFile; fileRef = AB92F67792BD6604BB330CBE /* libProxPulseWidgetUI.a */; };
@@ -138,6 +143,8 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		71CC8411C543736640578EBE /* Sprint7Verification.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sprint7Verification.swift; sourceTree = "<group>"; };
+		06B6991256E6A4689C51D809 /* ProfileFormVerification.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileFormVerification.swift; sourceTree = "<group>"; };
 		06E54A719F704692C40C2387 /* Preferences.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Preferences.swift; sourceTree = "<group>"; };
 		08D80C710B7EB9068AF7CC04 /* ProxmoxAPIService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProxmoxAPIService.swift; sourceTree = "<group>"; };
 		08F35F63359D711234CE130D /* Sprint5Verification.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sprint5Verification.swift; sourceTree = "<group>"; };
@@ -146,9 +153,11 @@
 		0FC46DF0ABEEE35578C7FCDD /* ReleaseMediaVerification.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReleaseMediaVerification.swift; sourceTree = "<group>"; };
 		12FFE3B656365565346739DF /* RuntimeUIVerification.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RuntimeUIVerification.swift; sourceTree = "<group>"; };
 		17B96F3629EC43FA99E1A637 /* FrontRackView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FrontRackView.swift; sourceTree = "<group>"; };
+		18F9BC6134014F8D90D24139 /* ConnectionFailure.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConnectionFailure.swift; sourceTree = "<group>"; };
 		194E14F069DAE1E6CD755ADF /* ProxPulseApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProxPulseApp.swift; sourceTree = "<group>"; };
 		1C17D2F939E66D1900375AC9 /* TelemetryFormat.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TelemetryFormat.swift; sourceTree = "<group>"; };
 		23F566E59A40BB546D062FC4 /* AddServerSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddServerSheet.swift; sourceTree = "<group>"; };
+		259F5C102D2F9831D5E391CC /* UpdateHandoff.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UpdateHandoff.swift; sourceTree = "<group>"; };
 		27696EF75FB447F3AD76BBDB /* Models.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models.swift; sourceTree = "<group>"; };
 		391435C0B62CE2D7C1CAC613 /* ProxPulse.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ProxPulse.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		408281E7347A7D4F389C9F80 /* Sprint51Verification.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sprint51Verification.swift; sourceTree = "<group>"; };
@@ -174,6 +183,7 @@
 		8A138C02215B4A29924B3328 /* LocalizationViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalizationViews.swift; sourceTree = "<group>"; };
 		8E101A9635544156D2DDFD7D /* ActivityRingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActivityRingView.swift; sourceTree = "<group>"; };
 		918B231FD93025946F894712 /* ProxPulseCoreTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ProxPulseCoreTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		95101E8FAC3DA63D76CC8BE0 /* UpdateDownload.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UpdateDownload.swift; sourceTree = "<group>"; };
 		953F5E298D6908087C7C6023 /* TerminalLauncher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TerminalLauncher.swift; sourceTree = "<group>"; };
 		9B835A1CD718242F383806B8 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		9C67A78FA533FFC9AA05EA59 /* DiagnosticEngineTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiagnosticEngineTests.swift; sourceTree = "<group>"; };
@@ -274,6 +284,8 @@
 				85A4850801FF8139A39EE95E /* NotificationService.swift */,
 				194E14F069DAE1E6CD755ADF /* ProxPulseApp.swift */,
 				0FC46DF0ABEEE35578C7FCDD /* ReleaseMediaVerification.swift */,
+				06B6991256E6A4689C51D809 /* ProfileFormVerification.swift */,
+				71CC8411C543736640578EBE /* Sprint7Verification.swift */,
 				12FFE3B656365565346739DF /* RuntimeUIVerification.swift */,
 				08F35F63359D711234CE130D /* Sprint5Verification.swift */,
 				563211C25E504D9625A82CAF /* Sprint6Verification.swift */,
@@ -321,6 +333,7 @@
 		5F8778B6E783AF2C265499E4 /* ProxPulseCore */ = {
 			isa = PBXGroup;
 			children = (
+				18F9BC6134014F8D90D24139 /* ConnectionFailure.swift */,
 				0914B07713B56FFE9201E2A8 /* DiagnosticEngine.swift */,
 				FA3D3B9E71BDF54343F274D5 /* GuestCreation.swift */,
 				A4C4BC8552920E2AB38B4816 /* GuestTelemetry.swift */,
@@ -337,6 +350,8 @@
 				1C17D2F939E66D1900375AC9 /* TelemetryFormat.swift */,
 				F39F64D6BA55B9A3547B3A7B /* Topology.swift */,
 				B9A5E319CE732D56269CF93E /* TopologyLayout.swift */,
+				95101E8FAC3DA63D76CC8BE0 /* UpdateDownload.swift */,
+				259F5C102D2F9831D5E391CC /* UpdateHandoff.swift */,
 			);
 			name = ProxPulseCore;
 			path = Sources/ProxPulseCore;
@@ -594,6 +609,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				4FBB411D45A5D65559DCA097 /* ConnectionFailure.swift in Sources */,
 				D850F32F49E60B4CB092FFCF /* DiagnosticEngine.swift in Sources */,
 				4BD247DD10AD510690C357F6 /* GuestCreation.swift in Sources */,
 				3FA6DBFED2CCAC1EBEABEC77 /* GuestTelemetry.swift in Sources */,
@@ -610,6 +626,8 @@
 				41DE7741F09DDAA55D52DEBF /* TelemetryFormat.swift in Sources */,
 				CE95D0292EC78A440FD82204 /* Topology.swift in Sources */,
 				99233FB8CD707F02D680F8D7 /* TopologyLayout.swift in Sources */,
+				8132244C5050346A7EC09404 /* UpdateDownload.swift in Sources */,
+				3F0CDFBDDA37A30220533BB2 /* UpdateHandoff.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -637,6 +655,8 @@
 				D944C5100639A1B94A06A00B /* ProxPulseApp.swift in Sources */,
 				512C1CE55BDFDA12D4E6E103 /* QuickSearchOverlay.swift in Sources */,
 				6791C9724597D6C17249D90A /* ReleaseMediaVerification.swift in Sources */,
+				F9F10359CD7BE693CFC3ACA0 /* ProfileFormVerification.swift in Sources */,
+				26020693B381333D17187AF7 /* Sprint7Verification.swift in Sources */,
 				5018A5DEAF2D2C3C2EB9798A /* RuntimeUIVerification.swift in Sources */,
 				E877530AF107E0D730DC1DB9 /* SettingsView.swift in Sources */,
 				4EBD2508BC3D494E67AAF7E2 /* Sprint51Verification.swift in Sources */,
@@ -859,7 +879,7 @@
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				CODE_SIGN_STYLE = Automatic;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 16;
+				CURRENT_PROJECT_VERSION = 17;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_NS_ASSERTIONS = NO;
@@ -874,7 +894,7 @@
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = 0.2.2;
+				MARKETING_VERSION = 0.2.3;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -961,7 +981,7 @@
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				CODE_SIGN_STYLE = Automatic;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 16;
+				CURRENT_PROJECT_VERSION = 17;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
@@ -982,7 +1002,7 @@
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = 0.2.2;
+				MARKETING_VERSION = 0.2.3;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;

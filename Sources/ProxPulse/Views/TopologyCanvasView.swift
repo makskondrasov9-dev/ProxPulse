@@ -45,7 +45,7 @@ private struct TopologyFlowCanvas: View {
     var body: some View {
         // Read State in the view body so the first phase update invalidates Canvas.
         let currentPhases = phases
-        return TimelineView(.animation(paused: reduceMotion)) { context in
+        return TimelineView(.animation(paused: reduceMotion || !links.contains { $0.active && ($0.tunnel || ($0.receive ?? 0) > 0 || ($0.transmit ?? 0) > 0) })) { context in
             Canvas(rendersAsynchronously: true) { graphics, _ in
                 graphics.translateBy(x: -drawingOrigin.x, y: -drawingOrigin.y)
                 let now = context.date.timeIntervalSinceReferenceDate
