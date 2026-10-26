@@ -12,9 +12,12 @@ struct MetricSample: Identifiable {
     static let demoID = UUID(uuidString: "00000000-0000-0000-0000-000000000001")!
     var updates = UpdateManager()
     var profiles: [ServerProfile] = []
-    var selectedProfile = DashboardModel.demoID { didSet { if oldValue != selectedProfile { if persistSelection { UserDefaults.standard.set(selectedProfile.uuidString, forKey: "pulse.lastProfile") }; switchProfile() } } }
+    var selectedProfile = DashboardModel.demoID { didSet { if oldValue != selectedProfile { usingLAN = false; if persistSelection { UserDefaults.standard.set(selectedProfile.uuidString, forKey: "pulse.lastProfile") }; switchProfile() } } }
     var selectedNode = "" { didSet { if oldValue != selectedNode && !isDemo && !changingProfile { restartPolling(clear: true) } } }
     var usingLAN = false
+    var portAudits: [String: PortAudit] = [:]
+    var inspectingPorts: Set<String> = []
+    var portAuditTask: Task<Void, Never>?
     private var topologyTask: Task<Void, Never>?
     private var widgetPublishTask: Task<Void, Never>?
     private let snapshotWriter = SnapshotWriter()
@@ -70,8 +73,8 @@ struct MetricSample: Identifiable {
     private var started = false
     private var persistSelection = false
     private var diagnosticTask: Task<Void, Never>?
-    private var service: ProxmoxAPIService?
-    private var revision = 0
+    var service: ProxmoxAPIService?
+    var revision = 0
     private var changingProfile = false
     private var widgetReloadPolicy = WidgetReloadPolicy()
     @ObservationIgnored var widgetTestSink: ((WidgetSnapshot, Bool) -> Void)?
@@ -186,7 +189,11 @@ struct MetricSample: Identifiable {
         restartPolling(clear: true)
     }
     private func restartPolling(clear: Bool) {
-        pollTask?.cancel(); sleepTask?.cancel(); offlineTask?.cancel(); diagnosticTask?.cancel(); addressTask?.cancel(); topologyTask?.cancel()
+        service?.invalidate()
+        portAuditTask?.cancel(); portAuditTask = nil; portAudits = [:]; inspectingPorts = []
+        pollTask?.cancel(); pollTask = nil; sleepTask?.cancel(); sleepTask = nil; offlineTask?.cancel(); offlineTask = nil
+        diagnosticTask?.cancel(); diagnosticTask = nil; addressTask?.cancel(); addressTask = nil; topologyTask?.cancel(); topologyTask = nil
+        loadingAddresses = false; addressError = nil
         operationTasks.values.forEach { $0.cancel() }; operationTasks = [:]; busyGuests = []
         rules = MonitoringRules(); revision += 1
         isDiagnosing = false; loadingTopology = false; probingTunnels = false; service = nil; connectionError = nil
@@ -242,6 +249,7 @@ struct MetricSample: Identifiable {
                         self.node = snapshot.node
                         self.hasSnapshot = true; self.isLoading = false; self.connectionError = nil
                         self.lastUpdated = Date()
+                        self.schedulePortInspection()
                         self.history.append(.init(cpu: snapshot.node.cpu, ram: snapshot.node.memoryGB / max(1, snapshot.node.maxMemoryGB), disk: snapshot.node.storage.fraction))
                         self.history = Array(self.history.suffix(30))
                         if !self.incidentPresented { self.incidentReport = .live(storage: snapshot.node.storage, guests: snapshot.node.guests) }
@@ -284,6 +292,8 @@ struct MetricSample: Identifiable {
             value.ipAddresses = topologyGuestAddresses[MonitoringRules.guestKey(guest)] ?? guest.ipAddresses
             return value
         }
+        let audits = isDemo ? Dictionary(uniqueKeysWithValues: node.guests.filter(\.running).map { (MonitoringRules.guestKey($0), PortAudit.demo($0)) }) : portAudits
+        snapshot.applyPortAudits(audits)
         return snapshot
     }
     func publishSnapshot(force: Bool = false) {
@@ -468,10 +478,12 @@ struct MetricSample: Identifiable {
         let targetNode = guest?.node ?? node.id
         let fallbackHost = availableNodes.count <= 1 ? profile.endpoint.host ?? targetNode : targetNode
         let api = service
+        let current = revision
         let user = UserDefaults.standard.string(forKey: PreferenceKey.sshUser) ?? "root"
         Task {
             do {
                 let host = (try? await api?.sshHost(node: targetNode)) ?? fallbackHost
+                guard current == revision, !Task.isCancelled else { return }
                 try await TerminalLauncher.open(host: host, user: user, guest: guest)
             }
             catch { notice = "Не удалось открыть Terminal: \(error.localizedDescription)" }
@@ -493,5 +505,5 @@ struct MetricSample: Identifiable {
         }
         return history.map { metric == 0 ? $0.cpu : metric == 1 ? $0.ram : $0.disk }
     }
-    func stop() { topologyTask?.cancel(); widgetPublishTask?.cancel(); addressTask?.cancel(); pollTask?.cancel(); sleepTask?.cancel(); offlineTask?.cancel(); diagnosticTask?.cancel(); operationTasks.values.forEach { $0.cancel() }; revision += 1 }
+    func stop() { service?.invalidate(); portAuditTask?.cancel(); portAuditTask = nil; inspectingPorts = []; topologyTask?.cancel(); topologyTask = nil; widgetPublishTask?.cancel(); addressTask?.cancel(); pollTask?.cancel(); sleepTask?.cancel(); offlineTask?.cancel(); diagnosticTask?.cancel(); operationTasks.values.forEach { $0.cancel() }; revision += 1 }
 }

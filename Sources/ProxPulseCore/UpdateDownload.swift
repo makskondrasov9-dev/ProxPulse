@@ -21,7 +21,7 @@ public final class UpdateDownloader: NSObject, URLSessionDownloadDelegate, @unch
     private var lastReport = Date.distantPast
     public init(destination: URL, progress: @escaping @Sendable (DownloadProgress) -> Void) { self.destination = destination; self.progress = progress }
     public func download(_ url: URL, configuration: URLSessionConfiguration = .ephemeral) async throws -> URL {
-        configuration.timeoutIntervalForRequest = 20
+        configuration.timeoutIntervalForRequest = 10
         configuration.timeoutIntervalForResource = 180
         configuration.urlCache = nil
         let queue = OperationQueue(); queue.maxConcurrentOperationCount = 1; queue.qualityOfService = .utility
@@ -69,7 +69,7 @@ public enum UpdatePackage {
         let directory = FileManager.default.temporaryDirectory.appendingPathComponent("ProxPulseUpdate-" + UUID().uuidString, isDirectory: true)
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true, attributes: [.posixPermissions: 0o700])
         do {
-            let config = URLSessionConfiguration.ephemeral; config.timeoutIntervalForRequest = 20; config.timeoutIntervalForResource = 30
+            let config = URLSessionConfiguration.ephemeral; config.timeoutIntervalForRequest = 10; config.timeoutIntervalForResource = 10
             let session = URLSession(configuration: config); defer { session.invalidateAndCancel() }
             let (data, response) = try await session.data(from: release.checksum)
             guard (response as? HTTPURLResponse)?.statusCode == 200, data.count < 4096 else { throw ReleaseUpdateError.invalidChecksum }

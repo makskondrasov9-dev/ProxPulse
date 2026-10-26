@@ -377,6 +377,15 @@ struct TopologyCanvasView: View {
                 HStack { Text("\(guest.kind == .lxc ? "CT" : "VM") \(guest.id)").foregroundStyle(.secondary); Text(addresses.first ?? "IP —").foregroundStyle(accent.uiColor).lineLimit(1) }.font(.system(size: 10, design: .monospaced))
                 HStack { Text("CPU \(Int(guest.cpu * 100))% · \(guest.cpuCount.map(String.init) ?? "—") vCPU"); Spacer(); Text("RAM \(guest.memoryGB.formatted(.number.precision(.fractionLength(1)))) / \(guest.maxMemoryGB.formatted(.number.precision(.fractionLength(1)))) GB") }.font(.system(size: 9)).foregroundStyle(.secondary)
                 Text("↓ \(TelemetryFormat.rate(guest.receiveBps))  ↑ \(TelemetryFormat.rate(guest.transmitBps))").font(.system(size: 10, design: .monospaced)).foregroundStyle(.secondary)
+                if guest.running, model.node.online, model.connectionError == nil, let report = model.portAudit(for: guest) {
+                    HStack(spacing: 5) {
+                        Image(systemName: report.hasRisk ? "exclamationmark.triangle.fill" : "network")
+                        Text(report.ports.isEmpty ? L10n.text(report.coverage == .complete ? "Нет слушающих портов" : report.coverage == .unreachable ? "Порты: нет доступа с Mac" : "Порты: данные недоступны", language: language) : Array(Set(report.ports.map(\.port))).sorted().map(String.init).joined(separator: ", ")).lineLimit(1)
+                    }.font(.system(size: 9, weight: .medium)).foregroundStyle(report.hasRisk ? .orange : .secondary)
+                        .padding(.horizontal, 7).padding(.vertical, 4)
+                        .background((report.hasRisk ? Color.orange : Color.primary).opacity(report.hasRisk ? 0.1 : 0.035), in: Capsule())
+                        .help(PortAuditText.help(report, language: language))
+                }
             }.padding(12).frame(width: 294).background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 14))
                 .overlay(RoundedRectangle(cornerRadius: 14).stroke(.white.opacity(0.09)))
         }.buttonStyle(.plain).contextMenu { GuestContextMenu(guest: guest, model: model) }

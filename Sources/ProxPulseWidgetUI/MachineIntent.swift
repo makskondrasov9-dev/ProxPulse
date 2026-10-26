@@ -1,3 +1,4 @@
+import OSLog
 import AppIntents
 import WidgetKit
 import ProxPulseCore
@@ -65,7 +66,8 @@ public struct MachineEntry: TimelineEntry {
 public struct MachineTimelineProvider: AppIntentTimelineProvider {
     public init() {}
     public func placeholder(in context: Context) -> MachineEntry {
-        let snapshot = WidgetSnapshot(node: MockDataProvider.node, isDemo: true)
+        var snapshot = WidgetSnapshot(node: MockDataProvider.node, isDemo: true)
+        snapshot.applyPortAudits(Dictionary(uniqueKeysWithValues: MockDataProvider.node.guests.filter(\.running).map { (MonitoringRules.guestKey($0), PortAudit.demo($0)) }))
         return .init(date: .now, snapshot: snapshot, machineKey: snapshot.guests?.first.map(MonitoringRules.guestKey))
     }
     public static func entry(for configuration: SelectMachineIntent, snapshot: WidgetSnapshot?) -> MachineEntry {
@@ -77,7 +79,11 @@ public struct MachineTimelineProvider: AppIntentTimelineProvider {
         context.isPreview && configuration.machine == nil ? placeholder(in: context) : Self.entry(for: configuration, snapshot: WidgetSnapshotStore.load())
     }
     public func timeline(for configuration: SelectMachineIntent, in context: Context) async -> Timeline<MachineEntry> {
-        .init(entries: [Self.entry(for: configuration, snapshot: WidgetSnapshotStore.load())], policy: .after(Date().addingTimeInterval(30)))
+        let entry = Self.entry(for: configuration, snapshot: WidgetSnapshotStore.load())
+        let guest = entry.snapshot?.guests?.first { MonitoringRules.guestKey($0) == entry.machineKey }
+        let security = guest.flatMap { entry.snapshot?.portSecurity(for: $0, now: entry.date) }
+        Logger(subsystem: "dev.proxpulse.widget", category: "ports").info("Machine timeline vmid=\(guest?.id ?? -1, privacy: .public) ports=\(security?.ports.count ?? 0, privacy: .public) warning=\(security?.level == .warning, privacy: .public)")
+        return .init(entries: [entry], policy: .after(Date().addingTimeInterval(30)))
     }
 }
 

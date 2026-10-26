@@ -13,6 +13,22 @@ public struct GuestStatus: Decodable, Sendable {
     public var netin: Double?
     public var netout: Double?
     public var uptime: Double?
+    enum CodingKeys: String, CodingKey { case status, cpus, cpu, mem, maxmem, swap, maxswap, disk, maxdisk, netin, netout, uptime }
+    public init(from decoder: Decoder) throws {
+        let values = try decoder.container(keyedBy: CodingKeys.self)
+        status = try values.decodeIfPresent(String.self, forKey: .status)
+        cpus = try values.pveInt(.cpus)
+        cpu = try values.pveDouble(.cpu)
+        mem = try values.pveDouble(.mem)
+        maxmem = try values.pveDouble(.maxmem)
+        swap = try values.pveDouble(.swap)
+        maxswap = try values.pveDouble(.maxswap)
+        disk = try values.pveDouble(.disk)
+        maxdisk = try values.pveDouble(.maxdisk)
+        netin = try values.pveDouble(.netin)
+        netout = try values.pveDouble(.netout)
+        uptime = try values.pveDouble(.uptime)
+    }
 }
 
 public struct GuestSample: Identifiable, Sendable {

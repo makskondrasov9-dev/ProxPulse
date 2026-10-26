@@ -134,7 +134,7 @@ func verifyAPIFixtures() async throws {
         let addresses = try await api.guestAddresses(snapshot.node.guests[0])
         precondition(addresses == ["172.17.0.1", "192.168.1.20"])
         let primaryAddresses = try await api.guestAddresses(snapshot.node.guests[0], primaryFirst: true)
-        precondition(primaryAddresses.first == "192.168.1.20" && primaryAddresses.count == 2)
+        precondition(primaryAddresses == ["192.168.1.20"])
         APIFixtureProtocol.state.lock.withLock { APIFixtureProtocol.state.denyGuest = true }
         let partial = try await api.snapshot()
         precondition(partial.node.online && partial.node.guests[0].telemetryError != nil && partial.node.guests[1].telemetryError == nil)

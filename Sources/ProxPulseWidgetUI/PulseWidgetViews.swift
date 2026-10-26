@@ -151,20 +151,39 @@ public struct PulseWidgetView: View {
 public struct MachineWidgetView: View {
     public let entry: PulseEntry
     public let machineKey: String?
-    public init(entry: PulseEntry, machineKey: String? = nil) { self.entry = entry; self.machineKey = machineKey }
+    private let familyOverride: WidgetFamily?
+    @Environment(\.widgetFamily) private var family
+    private var size: WidgetFamily { familyOverride ?? family }
+    private var small: Bool { size == .systemSmall }
+    public init(entry: PulseEntry, machineKey: String? = nil, family: WidgetFamily? = nil) { self.entry = entry; self.machineKey = machineKey; familyOverride = family }
     private var language: String { entry.snapshot?.language ?? "ru" }
     private func text(_ value: String) -> String { L10n.text(value, language: language) }
     public var body: some View {
-        VStack(alignment: .leading, spacing: 9) {
-            if let snapshot = entry.snapshot,
-               let key = machineKey,
+        VStack(alignment: .leading, spacing: small ? 5 : 7) {
+            if let snapshot = entry.snapshot, let key = machineKey,
                let machine = snapshot.guests?.first(where: { MonitoringRules.guestKey($0) == key }) {
-                HStack { Circle().fill(machine.running ? .green : .gray).frame(width: 7, height: 7); Text(machine.name).font(.headline).lineLimit(1); Spacer(); if snapshot.isDemo { Text("DEMO").font(.system(size: 8, weight: .bold)) } }
-                HStack { Text("\(machine.kind == .lxc ? "CT" : "VM") \(machine.id)"); Spacer(); Text(machine.running ? "Online" : "Offline") }.font(.caption).foregroundStyle(.secondary)
-                HStack { Text("CPU \(Int(machine.cpu*100))% · \(machine.cpuCount.map(String.init) ?? "—") vCPU"); Spacer() }.font(.system(size: 11, weight: .medium))
-                Text("RAM \(TelemetryFormat.number(machine.memoryGB, language: language)) / \(TelemetryFormat.number(machine.maxMemoryGB, language: language)) GB").font(.system(size: 11))
-                ProgressView(value: min(1, machine.memoryGB / max(0.001, machine.maxMemoryGB))).tint(.purple)
-                HStack { Text(machine.ipAddresses?.first ?? "IP —").lineLimit(1); Spacer(); Text(TelemetryFormat.uptime(machine.uptimeSeconds)) }.font(.system(size: 10, design: .monospaced)).foregroundStyle(.secondary)
+                HStack(spacing: 5) {
+                    Circle().fill(machine.running ? .green : .gray).frame(width: 6, height: 6)
+                    Text(machine.name).font(small ? .system(size: 12, weight: .semibold) : .headline).lineLimit(1)
+                    Spacer(minLength: 0)
+                    if snapshot.isDemo { Text("DEMO").font(.system(size: 7, weight: .bold)) }
+                }
+                HStack { Text((machine.kind == .lxc ? "CT " : "VM ") + String(machine.id)); Spacer(); Text(text(machine.running ? "Работает" : "Выключена")) }.font(.system(size: small ? 9 : 10)).foregroundStyle(.secondary)
+                Text("CPU \(Int(machine.cpu*100))% · \(machine.cpuCount.map(String.init) ?? "—") vCPU").font(.system(size: small ? 10 : 11, weight: .medium))
+                Text("RAM \(TelemetryFormat.number(machine.memoryGB, language: language)) / \(TelemetryFormat.number(machine.maxMemoryGB, language: language)) GB").font(.system(size: small ? 10 : 11))
+                if !small { ProgressView(value: min(1, machine.memoryGB / max(0.001, machine.maxMemoryGB))).tint(.purple) }
+                HStack { Text(machine.ipAddresses?.first ?? "IP —").lineLimit(1); if !small { Spacer(); Text(TelemetryFormat.uptime(machine.uptimeSeconds)) } }.font(.system(size: small ? 9 : 10, design: .monospaced)).foregroundStyle(.secondary)
+                if let security = snapshot.portSecurity(for: machine, now: entry.date) { portBadge(security) }
+                if size == .systemLarge {
+                    Divider().opacity(0.4)
+                    HStack { Text("SWAP"); Spacer(); Text(TelemetryFormat.swap(machine.swapGB, language: language)) }.font(.caption)
+                    HStack { Text(text("Диск")); Spacer(); Text((machine.diskUsageAvailable == true ? TelemetryFormat.number(machine.diskGB, language: language) : "—") + " / " + (machine.maxDiskGB.map { TelemetryFormat.number($0, language: language) } ?? "—") + " GB") }.font(.caption)
+                    Text("↓ \(TelemetryFormat.rate(machine.receiveBps, language: language))   ↑ \(TelemetryFormat.rate(machine.transmitBps, language: language))").font(.system(size: 11, design: .monospaced))
+                    Text(machine.ipAddresses?.dropFirst().joined(separator: " · ") ?? "").font(.caption2).foregroundStyle(.secondary)
+                    Spacer(minLength: 0)
+                    Text(snapshot.profileName ?? snapshot.node).font(.caption).foregroundStyle(.secondary)
+                    Text(text("Порты: снимок API или TCP-проверки с Mac; доступ из Интернета не подтверждён.")).font(.system(size: 9)).foregroundStyle(.secondary)
+                }
                 if snapshot.state == .error || entry.date.timeIntervalSince(snapshot.date) >= 300 { Text(text("Снимок устарел")).font(.caption2).foregroundStyle(.orange) }
             } else {
                 Label(text("Машина"), systemImage: "shippingbox").font(.headline)
@@ -174,5 +193,17 @@ public struct MachineWidgetView: View {
             .containerBackground(.ultraThinMaterial, for: .widget)
             .preferredColorScheme(entry.snapshot?.appearance == "dark" ? .dark : entry.snapshot?.appearance == "light" ? .light : nil)
             .widgetURL(URL(string: "proxpulse://dashboard"))
+    }
+    private func portBadge(_ summary: PortSecuritySummary) -> some View {
+        let warning = summary.level == .warning
+        let ports = small ? Array(summary.ports.prefix(3)).map(String.init).joined(separator: ", ") + (summary.ports.count > 3 ? " +\(summary.ports.count-3)" : "") : summary.compactList
+        let label = summary.level == .unknown ? text("Порты: данные недоступны") : summary.ports.isEmpty ? text("Нет слушающих портов") : (small ? "" : text("Порты") + ": ") + ports
+        return HStack(spacing: 4) {
+            Image(systemName: warning ? "exclamationmark.triangle.fill" : summary.level == .unknown ? "questionmark.shield" : "shield")
+            Text(label).lineLimit(small ? 1 : 2).minimumScaleFactor(0.75)
+        }.font(.system(size: small ? 9 : 10, weight: .medium))
+            .foregroundStyle(warning ? Color.orange : .secondary)
+            .padding(.horizontal, small ? 4 : 7).padding(.vertical, 4)
+            .background((warning ? Color.orange : .primary).opacity(warning ? 0.12 : 0.04), in: RoundedRectangle(cornerRadius: 7))
     }
 }

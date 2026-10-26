@@ -95,6 +95,11 @@ public struct WidgetSnapshot: Codable, Sendable {
     public var accent: String?
     public var appearance: String?
     public var selectedMachineKey: String? = nil
+    // Guest keys include node/type/vmid; the snapshot itself is scoped to one active profile.
+    public var detectedPorts: [String: [Int]]? = nil
+    public var securityLevel: [String: PortSecurityLevel]? = nil
+    public var portAuditedAt: [String: Date]? = nil
+    public var portCoverage: [String: PortAudit.Coverage]? = nil
     public init(node: NodeSnapshot, isDemo: Bool = false) {
         state = isDemo ? .demo : node.online ? .live : .offline
         date = Date(); self.node = node.id; cpu = node.cpu; self.isDemo = isDemo

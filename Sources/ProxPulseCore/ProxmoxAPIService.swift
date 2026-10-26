@@ -2,7 +2,7 @@ import Foundation
 import Security
 
 public enum ProxmoxError: Error, LocalizedError {
-    case invalidEndpoint, missingToken, http(Int), keychain(OSStatus), invalidResponse, noNodes, twoFactorRequired, taskFailed(String), taskTimeout
+    case invalidEndpoint, missingToken, http(Int), keychain(OSStatus), invalidResponse, noNodes, twoFactorRequired, taskFailed(String), taskTimeout, decoding(String)
     public var errorDescription: String? {
         switch self {
         case .invalidEndpoint: "Требуется HTTPS URL сервера без query и fragment."
@@ -11,6 +11,7 @@ public enum ProxmoxError: Error, LocalizedError {
         case .http(403): "Недостаточно прав API (HTTP 403). Проверьте разрешения пользователя и API Token."
         case .http(let code): "Proxmox API: HTTP \(code)."
         case .keychain(let status): "Ошибка Keychain: \(status)."
+        case .decoding(let field): "Некорректный формат API-поля: \(field)."
         case .invalidResponse: "Некорректный ответ Proxmox."
         case .taskFailed(let status): "Задача Proxmox завершилась с ошибкой: \(status)"
         case .taskTimeout: "Задача ещё выполняется или её результат недоступен. Проверьте Task History Proxmox."
@@ -73,14 +74,51 @@ public struct ClusterResource: Decodable, Sendable {
     public var maxmem: Double?
     public var disk: Double?
     public var maxdisk: Double?
+    enum CodingKeys: String, CodingKey { case id, type, node, name, status, vmid, cpu, mem, maxmem, disk, maxdisk }
+    public init(from decoder: Decoder) throws {
+        let values = try decoder.container(keyedBy: CodingKeys.self)
+        id = try values.decode(String.self, forKey: .id)
+        type = try values.decode(String.self, forKey: .type)
+        node = try values.decodeIfPresent(String.self, forKey: .node)
+        name = try values.decodeIfPresent(String.self, forKey: .name)
+        status = try values.decodeIfPresent(String.self, forKey: .status)
+        vmid = try values.pveInt(.vmid)
+        cpu = try values.pveDouble(.cpu)
+        mem = try values.pveDouble(.mem)
+        maxmem = try values.pveDouble(.maxmem)
+        disk = try values.pveDouble(.disk)
+        maxdisk = try values.pveDouble(.maxdisk)
+    }
 }
 public struct NodeStatus: Decodable, Sendable {
-    public struct Memory: Decodable, Sendable { public var used: Double; public var total: Double }
-    public struct CPUInfo: Decodable, Sendable { public var model: String?; public var cpus: Int? }
+    public struct Memory: Decodable, Sendable {
+        public var used: Double; public var total: Double
+        enum CodingKeys: String, CodingKey { case used, total }
+        public init(from decoder: Decoder) throws {
+            let c = try decoder.container(keyedBy: CodingKeys.self)
+            guard let used = try c.pveDouble(.used), let total = try c.pveDouble(.total) else { throw ProxmoxError.decoding("memory") }
+            self.used = used; self.total = total
+        }
+    }
+    public struct CPUInfo: Decodable, Sendable {
+        public var model: String?; public var cpus: Int?
+        enum CodingKeys: String, CodingKey { case model, cpus }
+        public init(from decoder: Decoder) throws {
+            let c = try decoder.container(keyedBy: CodingKeys.self)
+            model = try c.decodeIfPresent(String.self, forKey: .model); cpus = try c.pveInt(.cpus)
+        }
+    }
     public var cpu: Double
     public var memory: Memory
     public var uptime: Double
     public var cpuinfo: CPUInfo?
+    enum CodingKeys: String, CodingKey { case cpu, memory, uptime, cpuinfo }
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        guard let cpu = try c.pveDouble(.cpu), let uptime = try c.pveDouble(.uptime) else { throw ProxmoxError.decoding("node.status") }
+        self.cpu = cpu; self.uptime = uptime
+        memory = try c.decode(Memory.self, forKey: .memory); cpuinfo = try c.decodeIfPresent(CPUInfo.self, forKey: .cpuinfo)
+    }
 }
 public struct StorageStatus: Decodable, Sendable {
     public var storage: String
@@ -91,6 +129,18 @@ public struct StorageStatus: Decodable, Sendable {
     public var type: String?
     public var content: String?
     public var avail: Double?
+    enum CodingKeys: String, CodingKey { case storage, total, used, active, enabled, type, content, avail }
+    public init(from decoder: Decoder) throws {
+        let values = try decoder.container(keyedBy: CodingKeys.self)
+        storage = try values.decode(String.self, forKey: .storage)
+        total = try values.pveDouble(.total)
+        used = try values.pveDouble(.used)
+        active = try values.pveFlag(.active)
+        enabled = try values.pveFlag(.enabled)
+        type = try values.decodeIfPresent(String.self, forKey: .type)
+        content = try values.decodeIfPresent(String.self, forKey: .content)
+        avail = try values.pveDouble(.avail)
+    }
 }
 public struct ServiceStatus: Decodable, Sendable {
     public var service: String
@@ -109,6 +159,7 @@ public actor ProxmoxAPIService {
     private let profile: ServerProfile
     private let session: URLSession
     private let suppliedSecret: String?
+    var lxcPortExecCapabilities: [String: Bool] = [:]
     private var configCache: [String: (Date, GuestConfiguration)] = [:]
     private var networkSampler = GuestNetworkSampler()
     private var guestTelemetryCache: [String: Guest] = [:]
@@ -121,13 +172,14 @@ public actor ProxmoxAPIService {
         let endpoint = try ProfileValidation.endpoint(profile.endpoint.absoluteString)
         guard let host = endpoint.host else { throw ProxmoxError.invalidEndpoint }
         self.profile = profile; suppliedSecret = secret
-        configuration.timeoutIntervalForRequest = 15
-        configuration.timeoutIntervalForResource = 25
+        configuration.timeoutIntervalForRequest = 10
+        configuration.timeoutIntervalForResource = 10
         configuration.httpShouldSetCookies = false
         configuration.httpMaximumConnectionsPerHost = 6
         session = URLSession(configuration: configuration, delegate: ServerTrustDelegate(host: host, allowInsecure: profile.allowInsecureSSL), delegateQueue: nil)
     }
     deinit { session.invalidateAndCancel() }
+    public nonisolated func invalidate() { session.invalidateAndCancel() }
     private struct Envelope<T: Decodable>: Decodable { var data: T }
     private struct TicketResponse: Decodable {
         var ticket: String?
@@ -144,12 +196,23 @@ public actor ProxmoxAPIService {
     }
     private func decode<T: Decodable & Sendable>(_ request: URLRequest, as: T.Type) async throws -> T {
         let data: Data, response: URLResponse
-        do { (data, response) = try await session.data(for: request) }
+        var bounded = request; bounded.timeoutInterval = 10
+        let request = bounded, session = self.session
+        do { (data, response) = try await PollDeadline.run(seconds: 10) { try await session.data(for: request) } }
         catch { throw ConnectionFailure.map(error) }
         guard let http = response as? HTTPURLResponse else { throw ProxmoxError.invalidResponse }
         guard (200..<300).contains(http.statusCode) else { throw ProxmoxError.http(http.statusCode) }
         assert(!Thread.isMainThread, "Blocking parsing/cache/file work must stay off MainActor")
-        return try JSONDecoder().decode(Envelope<T>.self, from: data).data
+        do { return try JSONDecoder().decode(Envelope<T>.self, from: data).data }
+        catch let error as DecodingError {
+            let path: [any CodingKey]
+            switch error {
+            case .keyNotFound(let key, let context): path = context.codingPath + [key]
+            case .typeMismatch(_, let context), .valueNotFound(_, let context), .dataCorrupted(let context): path = context.codingPath
+            @unknown default: path = []
+            }
+            throw ProxmoxError.decoding(path.map(\.stringValue).joined(separator: "."))
+        }
     }
     private func authenticate() async throws {
         guard profile.authMode == .password else { return }
@@ -167,8 +230,7 @@ public actor ProxmoxAPIService {
         guard let prevention = result.CSRFPreventionToken else { throw ProxmoxError.invalidResponse }
         ticket = value; csrf = prevention; ticketDate = Date()
     }
-    private func request<T: Decodable & Sendable>(_ path: [String], method: String = "GET", query: [URLQueryItem] = [], form: [String: String] = [:], as: T.Type, retry: Bool = true) async throws -> T {
-        try Task.checkCancellation()
+    func request<T: Decodable & Sendable>(_ path: [String], method: String = "GET", query: [URLQueryItem] = [], form: [String: String] = [:], json: Data? = nil, as: T.Type, retry: Bool = true) async throws -> T {
         try Task.checkCancellation()
         try await authenticate()
         try Task.checkCancellation()
@@ -184,10 +246,11 @@ public actor ProxmoxAPIService {
             let allowed = CharacterSet.alphanumerics.union(CharacterSet(charactersIn: "-._~"))
             request.httpBody = Data(form.sorted { $0.key < $1.key }.map { $0.key + "=" + $0.value.addingPercentEncoding(withAllowedCharacters: allowed)! }.joined(separator: "&").utf8)
         }
+        if let json { request.setValue("application/json", forHTTPHeaderField: "Content-Type"); request.httpBody = json }
         do { return try await decode(request, as: T.self) }
         catch ProxmoxError.http(401) where profile.authMode == .password && retry {
             ticket = nil; ticketDate = nil
-            return try await self.request(path, method: method, query: query, form: form, as: T.self, retry: false)
+            return try await self.request(path, method: method, query: query, form: form, json: json, as: T.self, retry: false)
         }
     }
     public func resources() async throws -> [ClusterResource] { try await request(["cluster", "resources"], as: [ClusterResource].self) }
@@ -256,11 +319,28 @@ public actor ProxmoxAPIService {
         let key = MonitoringRules.guestKey(guest)
         do {
             let status = try await guestStatus(guest)
-            let sampledAt = Date()
-            let config = try? await guestConfiguration(guest)
+            try Task.checkCancellation()
+            let sampledAt = Date(), previous = guestTelemetryCache[key]
             var value = networkSampler.apply(status, to: guest, date: sampledAt)
-            value.osType = config?.osType ?? guestTelemetryCache[key]?.osType
-            value.bridges = config?.bridges ?? guestTelemetryCache[key]?.bridges
+            value.osType = previous?.osType; value.bridges = previous?.bridges
+            value.cpuCount = value.cpuCount ?? previous?.cpuCount
+            if guest.kind == .lxc { value.maxSwapGB = value.maxSwapGB ?? previous?.maxSwapGB }
+            value.telemetryError = configCache[key] == nil ? "Конфигурация машины ещё не получена." : nil
+            // Publish valid resource metrics before a slow optional config request can hit the cycle deadline.
+            guestTelemetryCache[key] = value
+            let config: GuestConfiguration
+            do { config = try await guestConfiguration(guest) }
+            catch {
+                try Task.checkCancellation()
+                if guestTelemetryCache[key]?.telemetryDate == sampledAt { guestTelemetryCache[key]?.telemetryError = error.localizedDescription }
+                return
+            }
+            try Task.checkCancellation()
+            guard guestTelemetryCache[key]?.telemetryDate == sampledAt else { return }
+            value.osType = config.osType; value.bridges = config.bridges
+            value.cpuCount = status.cpus ?? config.cpuCount ?? value.cpuCount
+            if guest.kind == .lxc { value.maxSwapGB = value.maxSwapGB ?? config.swapMB.map { Double($0) * 1_048_576 / 1e9 } }
+            value.telemetryError = nil
             guestTelemetryCache[key] = value
         } catch {
             guard !Task.isCancelled else { return }
@@ -298,9 +378,12 @@ public actor ProxmoxAPIService {
             return name.hasPrefix("eth") || name.hasPrefix("en") || name.hasPrefix("bond") ? 0 : 1
         }
         let ordered = primaryFirst ? interfaces.sorted { priority($0) == priority($1) ? ($0.name ?? "") < ($1.name ?? "") : priority($0) < priority($1) } : interfaces
-        let addresses = ordered.filter { $0.name != "lo" }.flatMap { item in
+        let visible = ordered.filter { $0.name != "lo" && (!primaryFirst || priority($0) < 3) }
+        // One primary interface: do not probe unrelated guest-internal bridges with overlapping subnets.
+        let selected = primaryFirst ? Array(visible.prefix(1)) : visible
+        let addresses = selected.flatMap { item in
             [item.inet, item.inet6].compactMap { $0 } + (item.addresses ?? []).map(\.address)
-        }.map { $0.components(separatedBy: "/")[0] }.filter { !$0.hasPrefix("127.") && $0 != "::1" && !$0.hasPrefix("fe80:") && !$0.isEmpty }
+        }.map { $0.components(separatedBy: "/")[0] }.filter { PortCatalog.usableAddress($0) }
         if !primaryFirst { return Array(Set(addresses)).sorted() }
         var seen: Set<String> = []
         return addresses.filter { seen.insert($0).inserted }

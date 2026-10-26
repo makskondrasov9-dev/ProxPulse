@@ -15,14 +15,15 @@ struct GuestCard: View {
                         .font(.system(size: 17, weight: .medium)).foregroundStyle(guest.running ? accent.uiColor : .secondary)
                         .frame(width: 37, height: 37).background(.primary.opacity(0.045), in: RoundedRectangle(cornerRadius: 11))
                     VStack(alignment: .leading, spacing: 4) {
-                        T(guest.name).font(.system(size: 12, weight: .semibold)).lineLimit(1)
+                        Text(guest.name).font(.system(size: 12, weight: .semibold)).lineLimit(1)
                         T("\(guest.kind == .lxc ? "CT" : "VM") \(guest.id) · \(guest.role)").font(.system(size: 10)).foregroundStyle(.secondary).lineLimit(1)
                     }
                     Spacer(minLength: 0)
                     StatusDot(online: guest.running)
                 }
                 GuestResourcesView(guest: guest)
-                if guest.telemetryError != nil { TL("Телеметрия недоступна", systemImage: "exclamationmark.triangle").font(.system(size: 9)).foregroundStyle(.orange) }
+                PortAuditBadge(guest: guest, report: model.portAudit(for: guest), loading: model.inspectingPorts.contains(MonitoringRules.guestKey(guest)), available: model.node.online && (model.isDemo || model.connectionError == nil))
+                if guest.telemetryError != nil { TL("Часть телеметрии недоступна", systemImage: "exclamationmark.triangle").font(.system(size: 9)).foregroundStyle(.orange) }
 
             }
         }

@@ -7,6 +7,12 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		86C77448E9196E56421FC8C7 /* Sprint8Verification.swift in Sources */ = {isa = PBXBuildFile; fileRef = 96B558AD02CA004B9E26648B /* Sprint8Verification.swift */; };
+		B857EAE9B3224008EE1B6544 /* PortInspectionModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = C4C75B681AC66A785E1B23C1 /* PortInspectionModel.swift */; };
+		DA8A2BE7C88939AF3871F411 /* PortAuditViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA4C97CF2F58235FC0E92FD2 /* PortAuditViews.swift */; };
+		EA62F1D4BC7DEE8F66E49072 /* PortInspectionAPI.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78CE00A86648B4E29AAA9326 /* PortInspectionAPI.swift */; };
+		BD53EFA88C67A324557F51B6 /* PortInspection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5CE8067C2CA6ED33589B2E6D /* PortInspection.swift */; };
+		FECCD3973763906CAA5A7E65 /* APINumericDecoding.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4DD080E2B96623EFAFCFFB7 /* APINumericDecoding.swift */; };
 		26020693B381333D17187AF7 /* Sprint7Verification.swift in Sources */ = {isa = PBXBuildFile; fileRef = 71CC8411C543736640578EBE /* Sprint7Verification.swift */; };
 		F9F10359CD7BE693CFC3ACA0 /* ProfileFormVerification.swift in Sources */ = {isa = PBXBuildFile; fileRef = 06B6991256E6A4689C51D809 /* ProfileFormVerification.swift */; };
 		00BF07A1FC0ABF6C102A3AAD /* CanvasScrollZoom.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7EA7FD30E9060BF73D541336 /* CanvasScrollZoom.swift */; };
@@ -143,6 +149,12 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		96B558AD02CA004B9E26648B /* Sprint8Verification.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sprint8Verification.swift; sourceTree = "<group>"; };
+		C4C75B681AC66A785E1B23C1 /* PortInspectionModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PortInspectionModel.swift; sourceTree = "<group>"; };
+		CA4C97CF2F58235FC0E92FD2 /* PortAuditViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PortAuditViews.swift; sourceTree = "<group>"; };
+		78CE00A86648B4E29AAA9326 /* PortInspectionAPI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PortInspectionAPI.swift; sourceTree = "<group>"; };
+		5CE8067C2CA6ED33589B2E6D /* PortInspection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PortInspection.swift; sourceTree = "<group>"; };
+		B4DD080E2B96623EFAFCFFB7 /* APINumericDecoding.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APINumericDecoding.swift; sourceTree = "<group>"; };
 		71CC8411C543736640578EBE /* Sprint7Verification.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sprint7Verification.swift; sourceTree = "<group>"; };
 		06B6991256E6A4689C51D809 /* ProfileFormVerification.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileFormVerification.swift; sourceTree = "<group>"; };
 		06E54A719F704692C40C2387 /* Preferences.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Preferences.swift; sourceTree = "<group>"; };
@@ -280,11 +292,13 @@
 		2A8E2374DC1EFB582D918323 /* ProxPulse */ = {
 			isa = PBXGroup;
 			children = (
+				C4C75B681AC66A785E1B23C1 /* PortInspectionModel.swift */,
 				625AD8BC8A88F00361FD3E47 /* DashboardModel.swift */,
 				85A4850801FF8139A39EE95E /* NotificationService.swift */,
 				194E14F069DAE1E6CD755ADF /* ProxPulseApp.swift */,
 				0FC46DF0ABEEE35578C7FCDD /* ReleaseMediaVerification.swift */,
 				06B6991256E6A4689C51D809 /* ProfileFormVerification.swift */,
+				96B558AD02CA004B9E26648B /* Sprint8Verification.swift */,
 				71CC8411C543736640578EBE /* Sprint7Verification.swift */,
 				12FFE3B656365565346739DF /* RuntimeUIVerification.swift */,
 				08F35F63359D711234CE130D /* Sprint5Verification.swift */,
@@ -336,6 +350,9 @@
 				18F9BC6134014F8D90D24139 /* ConnectionFailure.swift */,
 				0914B07713B56FFE9201E2A8 /* DiagnosticEngine.swift */,
 				FA3D3B9E71BDF54343F274D5 /* GuestCreation.swift */,
+				B4DD080E2B96623EFAFCFFB7 /* APINumericDecoding.swift */,
+				5CE8067C2CA6ED33589B2E6D /* PortInspection.swift */,
+				78CE00A86648B4E29AAA9326 /* PortInspectionAPI.swift */,
 				A4C4BC8552920E2AB38B4816 /* GuestTelemetry.swift */,
 				B906055943FB381D56723D8E /* IncidentReport.swift */,
 				773486D41C63867ACDCE88DA /* LiveDataAdapter.swift */,
@@ -373,6 +390,7 @@
 			isa = PBXGroup;
 			children = (
 				8E101A9635544156D2DDFD7D /* ActivityRingView.swift */,
+				CA4C97CF2F58235FC0E92FD2 /* PortAuditViews.swift */,
 				EF30D606693543ADE991A69C /* DesignSystem.swift */,
 				8A138C02215B4A29924B3328 /* LocalizationViews.swift */,
 				7BA2394491466F0B05358A62 /* SunburstDiskView.swift */,
@@ -612,6 +630,9 @@
 				4FBB411D45A5D65559DCA097 /* ConnectionFailure.swift in Sources */,
 				D850F32F49E60B4CB092FFCF /* DiagnosticEngine.swift in Sources */,
 				4BD247DD10AD510690C357F6 /* GuestCreation.swift in Sources */,
+				FECCD3973763906CAA5A7E65 /* APINumericDecoding.swift in Sources */,
+				BD53EFA88C67A324557F51B6 /* PortInspection.swift in Sources */,
+				EA62F1D4BC7DEE8F66E49072 /* PortInspectionAPI.swift in Sources */,
 				3FA6DBFED2CCAC1EBEABEC77 /* GuestTelemetry.swift in Sources */,
 				539C1777774B0ECF2B6CF0C3 /* IncidentReport.swift in Sources */,
 				F7B1123BC5C3EDD7A2F30D80 /* LiveDataAdapter.swift in Sources */,
@@ -639,8 +660,10 @@
 				E441D8E57B60AA9682D1CFA6 /* AddServerSheet.swift in Sources */,
 				00BF07A1FC0ABF6C102A3AAD /* CanvasScrollZoom.swift in Sources */,
 				7BCDC1D238055580FEA2401C /* CreateGuestSheet.swift in Sources */,
+				B857EAE9B3224008EE1B6544 /* PortInspectionModel.swift in Sources */,
 				1A1FDCBE553E3A7B1FEB085D /* DashboardModel.swift in Sources */,
 				F179CE243FC7B4860F789238 /* DashboardView.swift in Sources */,
+				DA8A2BE7C88939AF3871F411 /* PortAuditViews.swift in Sources */,
 				7D955597A426D7B36954F294 /* DesignSystem.swift in Sources */,
 				C8F348C43A3A0C38A4FC1A1D /* FrontRackView.swift in Sources */,
 				D5344A54A3F15AA02E12189F /* GuestActionSheet.swift in Sources */,
@@ -656,6 +679,7 @@
 				512C1CE55BDFDA12D4E6E103 /* QuickSearchOverlay.swift in Sources */,
 				6791C9724597D6C17249D90A /* ReleaseMediaVerification.swift in Sources */,
 				F9F10359CD7BE693CFC3ACA0 /* ProfileFormVerification.swift in Sources */,
+				86C77448E9196E56421FC8C7 /* Sprint8Verification.swift in Sources */,
 				26020693B381333D17187AF7 /* Sprint7Verification.swift in Sources */,
 				5018A5DEAF2D2C3C2EB9798A /* RuntimeUIVerification.swift in Sources */,
 				E877530AF107E0D730DC1DB9 /* SettingsView.swift in Sources */,
@@ -879,7 +903,7 @@
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				CODE_SIGN_STYLE = Automatic;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 17;
+				CURRENT_PROJECT_VERSION = 18;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_NS_ASSERTIONS = NO;
@@ -894,7 +918,7 @@
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = 0.2.3;
+				MARKETING_VERSION = 0.2.4;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -981,7 +1005,7 @@
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				CODE_SIGN_STYLE = Automatic;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 17;
+				CURRENT_PROJECT_VERSION = 18;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
@@ -1002,7 +1026,7 @@
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = 0.2.3;
+				MARKETING_VERSION = 0.2.4;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;

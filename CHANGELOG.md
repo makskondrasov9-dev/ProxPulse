@@ -1,5 +1,25 @@
 # Changelog
 
+## v0.2.4 — 2026-10-26
+
+Universal macOS 14+, build 18.
+
+### Новое в v0.2.4 · build 18
+
+- **Аудит портов без SSH-ключей.** Для VM используется QEMU Guest Agent, для LXC — доступный API-exec или ограниченная TCP-проверка известных портов с Mac. Карточки и инспектор показывают источник и ограничения проверки; отсутствующий доступ не считается отсутствием портов.
+- **Бейджи безопасности во всём интерфейсе.** Открытые порты БД/FTP/Telnet выделяются янтарным в карточках, на карте топологии и в виджетах конкретной машины. У выключенных машин портовый блок скрыт. Номер порта указывает предполагаемый сервис, а доступ с Mac не доказывает доступ из Интернета.
+- **Виджеты машины Small / Medium / Large.** Каждый экземпляр сохраняет собственный выбор через AppIntent. Общий кэш передаёт `detectedPorts`, `securityLevel` и время аудита по ключу нода/тип/VMID; устаревшие и относящиеся к другому профилю данные не показываются.
+- **Исправления надёжности.** Восстановление топологии после LIVE/DEMO, отмена старых URLSession и TCP-проб, 10-секундный лимит запросов Proxmox, сохранение метрик при медленной конфигурации и явные ошибки формата API. Внутренние Docker-мосты исключены из автоматического выбора IP, устранены ложные предупреждения о чужих портах. Обновлены RU/EN и технический формат номеров портов.
+
+### New in v0.2.4 · build 18
+
+- **SSH-free port auditing.** VMs use QEMU Guest Agent; LXC uses an advertised API-exec endpoint or a bounded Mac-side scan of known TCP ports. Cards and the inspector explain the source and coverage. Unreachable does not mean no open ports.
+- **Security badges across the UI.** Database/FTP/Telnet ports receive amber indicators on cards, topology nodes and individual machine widgets. Stopped guests hide port status. Service names are inferred from port numbers; reachability from this Mac does not establish Internet exposure.
+- **Small / Medium / Large machine widgets.** Each instance keeps its own AppIntent selection. Shared cache fields `detectedPorts`, `securityLevel` and audit timestamps are keyed by node/type/VMID. Stale data and selections from another profile are suppressed.
+- **Reliability fixes.** Topology recovers after LIVE/DEMO switching; obsolete URLSession requests and TCP probes are cancelled. Proxmox requests have a 10-second limit, valid metrics survive a slow configuration request, and malformed API fields produce explicit errors. Automatic IP selection excludes internal Docker bridges to avoid misleading port warnings. RU/EN messages and technical port-number formatting were corrected.
+
+Standard Proxmox LXC API has no general `/exec` endpoint. TCP fallback requires a route from this Mac to the guest, scans a limited port list, and cannot identify UDP sockets or processes. Full socket/process data requires guest execution support and appropriate API permissions. / В стандартном LXC API нет общего `/exec`; TCP-фоллбэку нужен маршрут от Mac до гостя, он не определяет UDP и процессы. Для полного списка нужны поддержка выполнения команд и соответствующие права API.
+
 ## v0.2.3 — 2026-10-22
 
 Universal macOS 14+, build 17 (arm64 + x86_64).

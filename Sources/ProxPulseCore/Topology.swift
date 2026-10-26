@@ -8,22 +8,45 @@ public struct NodeNetworkInterface: Decodable, Identifiable, Sendable {
     public var address: String?
     public var gateway: String?
     public var id: String { iface }
+    enum CodingKeys: String, CodingKey { case iface, type, active, address, gateway }
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        iface = try c.decode(String.self, forKey: .iface); type = try c.decodeIfPresent(String.self, forKey: .type)
+        active = try c.pveFlag(.active); address = try c.decodeIfPresent(String.self, forKey: .address); gateway = try c.decodeIfPresent(String.self, forKey: .gateway)
+    }
     public var isBridge: Bool { type == "bridge" || type == "OVSBridge" || iface.hasPrefix("vmbr") }
     public var isTunnel: Bool { type == "tunnel" || ["awg", "wg", "tun"].contains { iface.hasPrefix($0) } }
     public init(iface: String, type: String? = nil, active: Int? = nil, address: String? = nil, gateway: String? = nil) { self.iface = iface; self.type = type; self.active = active; self.address = address; self.gateway = gateway }
 }
 public struct GuestConfiguration: Decodable, Sendable {
     public var osType: String?
+    public var cpuCount: Int?
+    public var swapMB: Int?
+    public var configuredAddresses: [String]
     public var bridges: [String]
     private struct Key: CodingKey { var stringValue: String; var intValue: Int? { nil }; init?(stringValue: String) { self.stringValue = stringValue }; init?(intValue: Int) { return nil } }
     public init(from decoder: Decoder) throws {
         let values = try decoder.container(keyedBy: Key.self)
-        osType = try? values.decode(String.self, forKey: Key(stringValue: "ostype")!)
+        osType = try values.decodeIfPresent(String.self, forKey: Key(stringValue: "ostype")!)
+        let cores = try values.pveInt(Key(stringValue: "cores")!)
+        let sockets = try values.pveInt(Key(stringValue: "sockets")!) ?? 1
+        cpuCount = cores.flatMap { value in let result = value.multipliedReportingOverflow(by: sockets); return result.overflow ? nil : result.partialValue }
+        swapMB = try values.pveInt(Key(stringValue: "swap")!)
+        configuredAddresses = []
+        for key in values.allKeys where key.stringValue.hasPrefix("net") || key.stringValue.hasPrefix("ipconfig") {
+            guard let value = try values.decodeIfPresent(String.self, forKey: key) else { continue }
+            for part in value.split(separator: ",") {
+                let pair = part.split(separator: "=", maxSplits: 1).map(String.init)
+                if pair.count == 2, ["ip", "ip6"].contains(pair[0]), PortCatalog.usableAddress(pair[1]) {
+                    configuredAddresses.append(pair[1].components(separatedBy: "/")[0])
+                }
+            }
+        }
         let keys = values.allKeys.filter { $0.stringValue.hasPrefix("net") && Int($0.stringValue.dropFirst(3)) != nil }
             .sorted { Int($0.stringValue.dropFirst(3))! < Int($1.stringValue.dropFirst(3))! }
         var seen: Set<String> = []
-        bridges = keys.compactMap { key -> String? in
-            guard let network = try? values.decode(String.self, forKey: key),
+        bridges = try keys.compactMap { key -> String? in
+            guard let network = try values.decodeIfPresent(String.self, forKey: key),
                   let bridge = network.split(separator: ",").first(where: { $0.hasPrefix("bridge=") }).map({ String($0.dropFirst(7)) }),
                   seen.insert(bridge).inserted else { return nil }
             return bridge

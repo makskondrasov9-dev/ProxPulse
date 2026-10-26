@@ -4,8 +4,8 @@
 <h1 align="center">ProxPulse</h1>
 <p align="center">Your Proxmox cluster. One calm glance.<br/>Ваш кластер Proxmox. Один спокойный взгляд.</p>
 <p align="center">
-  <a href="https://github.com/makskondrasov9-dev/ProxPulse/releases/tag/v0.2.3">Release v0.2.3</a> ·
-  <a href="https://github.com/makskondrasov9-dev/ProxPulse/releases/download/v0.2.3/ProxPulse-v0.2.3.dmg">Download DMG</a> ·
+  <a href="https://github.com/makskondrasov9-dev/ProxPulse/releases/tag/v0.2.4">Release v0.2.4</a> ·
+  <a href="https://github.com/makskondrasov9-dev/ProxPulse/releases/download/v0.2.4/ProxPulse-v0.2.4.dmg">Download DMG</a> ·
   macOS 14+ · Apple Silicon & Intel · Swift 6
 </p>
 
@@ -41,7 +41,16 @@ Retina screenshots of the actual app with **DEMO data**. Network addresses and w
 
 **ProxPulse** — нативный клиент Proxmox VE для macOS на SwiftUI и WidgetKit. Мониторинг кластера, управление VM/LXC, телеметрия и диагностика собраны в одном интерфейсе. Секреты подключения хранятся в Apple Keychain.
 
-### Новое в v0.2.3 · build 17
+### Новое в v0.2.4 · build 18
+
+- **Аудит портов без SSH-ключей.** Для VM используется QEMU Guest Agent, для LXC — доступный API-exec или ограниченная TCP-проверка известных портов с Mac. Карточки и инспектор показывают источник и ограничения проверки; отсутствующий доступ не считается отсутствием портов.
+- **Бейджи безопасности во всём интерфейсе.** Открытые порты БД/FTP/Telnet выделяются янтарным в карточках, на карте топологии и в виджетах конкретной машины. У выключенных машин портовый блок скрыт. Номер порта указывает предполагаемый сервис, а доступ с Mac не доказывает доступ из Интернета.
+- **Виджеты машины Small / Medium / Large.** Каждый экземпляр сохраняет собственный выбор через AppIntent. Общий кэш передаёт `detectedPorts`, `securityLevel` и время аудита по ключу нода/тип/VMID; устаревшие и относящиеся к другому профилю данные не показываются.
+- **Исправления надёжности.** Восстановление топологии после LIVE/DEMO, отмена старых URLSession и TCP-проб, 10-секундный лимит запросов Proxmox, сохранение метрик при медленной конфигурации и явные ошибки формата API. Внутренние Docker-мосты исключены из автоматического выбора IP, устранены ложные предупреждения о чужих портах. Обновлены RU/EN и технический формат номеров портов.
+
+Standard Proxmox LXC API has no general `/exec` endpoint. TCP fallback requires a route from this Mac to the guest, scans a limited port list, and cannot identify UDP sockets or processes. Full socket/process data requires guest execution support and appropriate API permissions. / В стандартном LXC API нет общего `/exec`; TCP-фоллбэку нужен маршрут от Mac до гостя, он не определяет UDP и процессы. Для полного списка нужны поддержка выполнения команд и соответствующие права API.
+
+### Возможности v0.2.3 · build 17
 
 - **API Token без UUID-ограничения.** При добавлении и редактировании подходит любой непустой Secret; окружающие пробелы убираются. «Проверить соединение» и «Сохранить» доступны при заполненной форме. Пустое поле при редактировании сохраняет существующий секрет в Keychain, а неверные учётные данные показывают ответ 401 от Proxmox.
 - **Домены и reverse proxy.** HTTPS без явного порта использует 443; указанный порт, префикс `/pve` и завершающий слэш обрабатываются корректно. Insecure SSL работает для IP и доменов. Ошибки DNS, SSL, таймаута/недоступности и авторизации имеют понятные сообщения.
@@ -102,7 +111,7 @@ open /Applications/ProxPulse.app
 
 Для ручной установки:
 
-1. Скачайте **[ProxPulse-v0.2.3.dmg](https://github.com/makskondrasov9-dev/ProxPulse/releases/download/v0.2.3/ProxPulse-v0.2.3.dmg)**. Рядом опубликована **[контрольная сумма SHA-256](https://github.com/makskondrasov9-dev/ProxPulse/releases/download/v0.2.3/ProxPulse-v0.2.3.dmg.sha256)**.
+1. Скачайте **[ProxPulse-v0.2.4.dmg](https://github.com/makskondrasov9-dev/ProxPulse/releases/download/v0.2.4/ProxPulse-v0.2.4.dmg)**. Рядом опубликована **[контрольная сумма SHA-256](https://github.com/makskondrasov9-dev/ProxPulse/releases/download/v0.2.4/ProxPulse-v0.2.4.dmg.sha256)**.
 2. Закройте старую версию. Откройте DMG и перетащите **ProxPulse.app → Applications**, подтвердив замену при обновлении.
 3. Запустите `/Applications/ProxPulse.app`. Выберите DEMO или добавьте сервер в WORKSPACE / Настройках. Поддерживаются API Token и логин/пароль; самоподписанный SSL настраивается для каждого профиля.
 4. Для виджетов: правый клик на рабочем столе → **Изменить виджеты** → **ProxPulse**. Сначала запустите приложение из Applications; держите его запущенным для свежих метрик.
@@ -130,7 +139,14 @@ xattr -cr /Applications/ProxPulse.app
 
 **ProxPulse** is a native Proxmox VE client for macOS, built with SwiftUI and WidgetKit. Monitor your cluster, manage VM/LXC workloads and inspect telemetry in one interface. Connection secrets stay in Apple Keychain.
 
-### New in v0.2.3 · build 17
+### New in v0.2.4 · build 18
+
+- **SSH-free port auditing.** VMs use QEMU Guest Agent; LXC uses an advertised API-exec endpoint or a bounded Mac-side scan of known TCP ports. Cards and the inspector explain the source and coverage. Unreachable does not mean no open ports.
+- **Security badges across the UI.** Database/FTP/Telnet ports receive amber indicators on cards, topology nodes and individual machine widgets. Stopped guests hide port status. Service names are inferred from port numbers; reachability from this Mac does not establish Internet exposure.
+- **Small / Medium / Large machine widgets.** Each instance keeps its own AppIntent selection. Shared cache fields `detectedPorts`, `securityLevel` and audit timestamps are keyed by node/type/VMID. Stale data and selections from another profile are suppressed.
+- **Reliability fixes.** Topology recovers after LIVE/DEMO switching; obsolete URLSession requests and TCP probes are cancelled. Proxmox requests have a 10-second limit, valid metrics survive a slow configuration request, and malformed API fields produce explicit errors. Automatic IP selection excludes internal Docker bridges to avoid misleading port warnings. RU/EN messages and technical port-number formatting were corrected.
+
+### Features introduced in v0.2.3 · build 17
 
 - **API tokens without UUID restrictions.** Add and edit profiles accept any nonempty secret, trimming surrounding whitespace. Test Connection and Save remain available for a complete form. Leaving the secret blank while editing preserves the existing Keychain credential; invalid credentials display Proxmox’s 401 response.
 - **Domains and reverse proxies.** HTTPS without an explicit port uses 443; explicit ports, `/pve` path prefixes and trailing slashes are handled correctly. Insecure SSL supports both IP addresses and domains. DNS, SSL, timeout/connectivity and authentication errors have actionable messages.
@@ -191,7 +207,7 @@ open /Applications/ProxPulse.app
 
 Manual DMG installation:
 
-1. Download **[ProxPulse-v0.2.3.dmg](https://github.com/makskondrasov9-dev/ProxPulse/releases/download/v0.2.3/ProxPulse-v0.2.3.dmg)** and its **[SHA-256 checksum](https://github.com/makskondrasov9-dev/ProxPulse/releases/download/v0.2.3/ProxPulse-v0.2.3.dmg.sha256)**.
+1. Download **[ProxPulse-v0.2.4.dmg](https://github.com/makskondrasov9-dev/ProxPulse/releases/download/v0.2.4/ProxPulse-v0.2.4.dmg)** and its **[SHA-256 checksum](https://github.com/makskondrasov9-dev/ProxPulse/releases/download/v0.2.4/ProxPulse-v0.2.4.dmg.sha256)**.
 2. Quit the previous version. Open the DMG and drag **ProxPulse.app → Applications**, replacing the app when upgrading.
 3. Launch `/Applications/ProxPulse.app`. Try DEMO or add a server in WORKSPACE / Settings. API tokens and password authentication are supported; self-signed TLS can be enabled per profile.
 4. Right-click the desktop → **Edit Widgets** → **ProxPulse**. Launch the app from Applications first and keep it running for fresh metrics.
@@ -225,7 +241,7 @@ cd ProxPulse
 ./scripts/verify-local.sh       # Build, API/core/UI checks, WidgetKit executable
 ./scripts/verify-profile-form.sh # Native token-form regression (test-only Python 3 + OpenSSL)
 ./scripts/build-release.sh      # Optimized universal app + WidgetKit extension
-./scripts/create-dmg.sh         # dist/ProxPulse-v0.2.3.dmg + SHA-256
+./scripts/create-dmg.sh         # dist/ProxPulse-v0.2.4.dmg + SHA-256
 ```
 
 The compatibility helper confines any SDK compatibility adjustments to `.build`; it does not modify the SDK. On restricted development hosts, `PROXPULSE_LOCAL_CACHE=1` keeps SwiftPM caches inside the workspace. `PROXPULSE_REUSE_ICON=1` reuses the checked-in icon during release builds.

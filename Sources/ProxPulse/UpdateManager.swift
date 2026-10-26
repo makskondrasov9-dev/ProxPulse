@@ -19,7 +19,7 @@ import ProxPulseCore
     var showRelease = false
     var status: String?
     var error: String?
-    let currentVersion = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "0.2.3"
+    let currentVersion = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "0.2.4"
     private var checkedAtLaunch = false
     func atLaunch() async {
         guard !checkedAtLaunch else { return }; checkedAtLaunch = true
@@ -34,7 +34,7 @@ import ProxPulseCore
             let version = currentVersion
             let latest = try await Task.detached(priority: .utility) {
                 let configuration = URLSessionConfiguration.ephemeral
-                configuration.timeoutIntervalForRequest = 15; configuration.timeoutIntervalForResource = 25
+                configuration.timeoutIntervalForRequest = 10; configuration.timeoutIntervalForResource = 10
                 let session = URLSession(configuration: configuration); defer { session.invalidateAndCancel() }
                 var request = URLRequest(url: ReleaseUpdate.endpoint)
                 request.cachePolicy = .reloadIgnoringLocalCacheData

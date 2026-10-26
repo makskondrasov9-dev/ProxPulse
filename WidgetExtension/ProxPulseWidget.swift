@@ -18,7 +18,7 @@ struct MachineWidget: Widget {
         }
             .configurationDisplayName("ProxPulse · Container / VM")
             .description("Status · vCPU · RAM · IP · Uptime. Right-click → Edit Widget to choose a machine for each widget.")
-            .supportedFamilies([.systemMedium])
+            .supportedFamilies([.systemSmall, .systemMedium, .systemLarge])
     }
 }
 @main struct ProxPulseWidget: WidgetBundle {

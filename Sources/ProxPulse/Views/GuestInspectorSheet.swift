@@ -25,6 +25,7 @@ struct GuestInspectorSheet: View {
                     kpis
                     actions
                     specifications
+                    PortAuditPanel(guest: guest, model: model)
                     if let error = guest.telemetryError { T(error).font(.caption).foregroundStyle(.orange) }
                     if guest.kind == .qemu { T("QEMU: SWAP и занятое место внутри ОС могут быть недоступны в status/current. Для IP нужен QEMU Guest Agent.").font(.caption2).foregroundStyle(.secondary) }
                     HStack {

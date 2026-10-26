@@ -18,7 +18,7 @@ struct MenuBarPopover: View {
             }
             Divider()
             ForEach(model.node.guests) { guest in
-                HStack { StatusDot(online: guest.running); T(guest.name).font(.system(size: 12)); Spacer(); T("\(guest.id)").font(.system(size: 10, design: .monospaced)).foregroundStyle(.secondary)
+                HStack { StatusDot(online: guest.running); Text(guest.name).font(.system(size: 12)); Spacer(); T("\(guest.id)").font(.system(size: 10, design: .monospaced)).foregroundStyle(.secondary)
                     Button { model.request(guest, action: guest.running ? .shutdown : .start, origin: .menuBar) } label: { Image(systemName: guest.running ? "stop.circle" : "play.circle") }.buttonStyle(.plain).localizedHelp(guest.running ? "Остановить в демо" : "Запустить в демо")
                 }
             }
