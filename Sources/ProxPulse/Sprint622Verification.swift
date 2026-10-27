@@ -49,7 +49,7 @@ import ProxPulseWidgetUI
         precondition(keys.count == 3)
         let selected = SelectMachineIntent(machine: entities[0])
         var otherProfile = snapshot; otherProfile.profileID = UUID()
-        precondition(MachineTimelineProvider.entry(for: selected, snapshot: otherProfile).machineKey == nil)
+        precondition(MachineTimelineProvider.entry(for: selected, snapshot: otherProfile).machineKey == selected.machine?.id)
         precondition(MachineTimelineProvider.entry(for: SelectMachineIntent(), snapshot: snapshot).machineKey == nil)
         var updated = snapshot; updated.guests?[0].memoryGB = 2.1
         precondition(MachineTimelineProvider.entry(for: selected, snapshot: updated).snapshot?.guests?[0].memoryGB == 2.1)

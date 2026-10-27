@@ -15,9 +15,9 @@ public struct MachineEntity: AppEntity {
     public var displayRepresentation: DisplayRepresentation {
         .init(title: "\(name) · \(vmid)", subtitle: running ? "🟢 Работает / Running" : "⚪️ Остановлен / Stopped")
     }
-    public init(guest: Guest, profileID: UUID?) {
+    public init(guest: Guest, profileID: UUID?, identifier: String? = nil) {
         guestKey = MonitoringRules.guestKey(guest)
-        id = Self.identifier(profileID: profileID, guestKey: guestKey)
+        id = identifier ?? Self.identifier(profileID: profileID, guestKey: guestKey)
         name = guest.name; node = guest.node; vmid = guest.id; running = guest.running
     }
     private init(id: String, key: String, node: String, vmid: Int) {
@@ -25,11 +25,9 @@ public struct MachineEntity: AppEntity {
     }
     /// Preserve an archived selection after deletion, while excluding it from suggestions.
     public static func missing(identifier: String) -> MachineEntity? {
-        let components = identifier.split(separator: "|", maxSplits: 1).map(String.init)
-        guard components.count == 2, UUID(uuidString: components[0]) != nil else { return nil }
-        let path = components[1].split(separator: "/").map(String.init)
-        guard path.count == 3, ["lxc", "qemu"].contains(path[1]), let vmid = Int(path[2]) else { return nil }
-        return .init(id: identifier, key: components[1], node: path[0], vmid: vmid)
+        guard let identity = MachineIdentity(identifier) else { return nil }
+        let key = identity.node.map { $0 + "/" + (identity.kind?.rawValue ?? "unknown") + "/" + String(identity.vmid) } ?? identifier
+        return .init(id: identifier, key: key, node: identity.node ?? "", vmid: identity.vmid)
     }
     public static func identifier(profileID: UUID?, guestKey: String) -> String { "\(profileID?.uuidString ?? "legacy")|\(guestKey)" }
 }
@@ -42,8 +40,14 @@ public struct MachineEntityQuery: EntityStringQuery {
         return (snapshot.guests ?? []).sorted { $0.id < $1.id }.map { MachineEntity(guest: $0, profileID: snapshot.profileID) }
     }
     public func entities(for identifiers: [String]) async throws -> [MachineEntity] {
-        let entities = Self.machines(in: loadSnapshot())
-        return identifiers.compactMap { id in entities.first { $0.id == id } ?? MachineEntity.missing(identifier: id) }
+        // No process-global entity cache: every query uses exactly the current active profile.
+        let snapshot = loadSnapshot()
+        return identifiers.compactMap { id in
+            if let snapshot, let guest = MachineIdentity(id)?.resolve(in: snapshot) {
+                return MachineEntity(guest: guest, profileID: snapshot.profileID, identifier: id)
+            }
+            return MachineEntity.missing(identifier: id)
+        }
     }
     public func suggestedEntities() async throws -> [MachineEntity] { Self.machines(in: loadSnapshot()) }
     public func entities(matching string: String) async throws -> [MachineEntity] {
@@ -72,8 +76,10 @@ public struct MachineTimelineProvider: AppIntentTimelineProvider {
     }
     public static func entry(for configuration: SelectMachineIntent, snapshot: WidgetSnapshot?) -> MachineEntry {
         let selected = configuration.machine
-        let matchesProfile = selected.map { $0.id == MachineEntity.identifier(profileID: snapshot?.profileID, guestKey: $0.guestKey) } ?? false
-        return .init(date: .now, snapshot: snapshot, machineKey: matchesProfile ? selected?.guestKey : nil)
+        guard let selected else { return .init(date: .now, snapshot: snapshot, machineKey: nil) }
+        let guest = snapshot.flatMap { MachineIdentity(selected.id)?.resolve(in: $0) }
+        // A stored selection that is missing/foreign must say “not found”, not “choose a machine”.
+        return .init(date: .now, snapshot: snapshot, machineKey: guest.map(MonitoringRules.guestKey) ?? selected.id)
     }
     public func snapshot(for configuration: SelectMachineIntent, in context: Context) async -> MachineEntry {
         context.isPreview && configuration.machine == nil ? placeholder(in: context) : Self.entry(for: configuration, snapshot: WidgetSnapshotStore.load())

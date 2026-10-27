@@ -20,7 +20,7 @@ import ProxPulseWidgetUI
         let removed = try await query.entities(for: [selected.id])
         precondition(removed.first?.id == selected.id)
         let entry = MachineTimelineProvider.entry(for: SelectMachineIntent(machine: removed[0]), snapshot: snapshot)
-        precondition(entry.machineKey == selected.guestKey && !snapshot.guests!.contains { MonitoringRules.guestKey($0) == entry.machineKey })
+        precondition(entry.machineKey == selected.id && !snapshot.guests!.contains { MonitoringRules.guestKey($0) == entry.machineKey })
         RuntimeUIVerification.capture(MachineWidgetView(entry: .init(date: .now, snapshot: snapshot), machineKey: entry.machineKey).padding(16), size: .init(width: 360, height: 180), name: "sprint61-missing-machine")
         snapshot.guests = MockDataProvider.guests; try write()
         let restored = try await query.suggestedEntities(); precondition(restored.count == 6)

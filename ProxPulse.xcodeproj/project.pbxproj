@@ -7,6 +7,9 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		D4E55D36417831E2CE0CD663 /* Sprint9Verification.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D69D1884160971D781799B3 /* Sprint9Verification.swift */; };
+		4AAF79E51D6D1B98051E4DD3 /* SnapshotPersistence.swift in Sources */ = {isa = PBXBuildFile; fileRef = E75A78BA9E19A28784166CCC /* SnapshotPersistence.swift */; };
+		456213399DCC9A55CB48752B /* MachineIdentity.swift in Sources */ = {isa = PBXBuildFile; fileRef = 69A9CD10EBEB85BB7D180B06 /* MachineIdentity.swift */; };
 		86C77448E9196E56421FC8C7 /* Sprint8Verification.swift in Sources */ = {isa = PBXBuildFile; fileRef = 96B558AD02CA004B9E26648B /* Sprint8Verification.swift */; };
 		B857EAE9B3224008EE1B6544 /* PortInspectionModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = C4C75B681AC66A785E1B23C1 /* PortInspectionModel.swift */; };
 		DA8A2BE7C88939AF3871F411 /* PortAuditViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA4C97CF2F58235FC0E92FD2 /* PortAuditViews.swift */; };
@@ -149,6 +152,9 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		0D69D1884160971D781799B3 /* Sprint9Verification.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sprint9Verification.swift; sourceTree = "<group>"; };
+		E75A78BA9E19A28784166CCC /* SnapshotPersistence.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SnapshotPersistence.swift; sourceTree = "<group>"; };
+		69A9CD10EBEB85BB7D180B06 /* MachineIdentity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MachineIdentity.swift; sourceTree = "<group>"; };
 		96B558AD02CA004B9E26648B /* Sprint8Verification.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sprint8Verification.swift; sourceTree = "<group>"; };
 		C4C75B681AC66A785E1B23C1 /* PortInspectionModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PortInspectionModel.swift; sourceTree = "<group>"; };
 		CA4C97CF2F58235FC0E92FD2 /* PortAuditViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PortAuditViews.swift; sourceTree = "<group>"; };
@@ -292,6 +298,7 @@
 		2A8E2374DC1EFB582D918323 /* ProxPulse */ = {
 			isa = PBXGroup;
 			children = (
+				0D69D1884160971D781799B3 /* Sprint9Verification.swift */,
 				C4C75B681AC66A785E1B23C1 /* PortInspectionModel.swift */,
 				625AD8BC8A88F00361FD3E47 /* DashboardModel.swift */,
 				85A4850801FF8139A39EE95E /* NotificationService.swift */,
@@ -347,6 +354,8 @@
 		5F8778B6E783AF2C265499E4 /* ProxPulseCore */ = {
 			isa = PBXGroup;
 			children = (
+				E75A78BA9E19A28784166CCC /* SnapshotPersistence.swift */,
+				69A9CD10EBEB85BB7D180B06 /* MachineIdentity.swift */,
 				18F9BC6134014F8D90D24139 /* ConnectionFailure.swift */,
 				0914B07713B56FFE9201E2A8 /* DiagnosticEngine.swift */,
 				FA3D3B9E71BDF54343F274D5 /* GuestCreation.swift */,
@@ -627,6 +636,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				4AAF79E51D6D1B98051E4DD3 /* SnapshotPersistence.swift in Sources */,
+				456213399DCC9A55CB48752B /* MachineIdentity.swift in Sources */,
 				4FBB411D45A5D65559DCA097 /* ConnectionFailure.swift in Sources */,
 				D850F32F49E60B4CB092FFCF /* DiagnosticEngine.swift in Sources */,
 				4BD247DD10AD510690C357F6 /* GuestCreation.swift in Sources */,
@@ -656,6 +667,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				D4E55D36417831E2CE0CD663 /* Sprint9Verification.swift in Sources */,
 				5F84341EA1C624F523152C3A /* ActivityRingView.swift in Sources */,
 				E441D8E57B60AA9682D1CFA6 /* AddServerSheet.swift in Sources */,
 				00BF07A1FC0ABF6C102A3AAD /* CanvasScrollZoom.swift in Sources */,
@@ -903,7 +915,7 @@
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				CODE_SIGN_STYLE = Automatic;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 18;
+				CURRENT_PROJECT_VERSION = 19;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_NS_ASSERTIONS = NO;
@@ -918,7 +930,7 @@
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = 0.2.4;
+				MARKETING_VERSION = 0.2.5;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -1005,7 +1017,7 @@
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				CODE_SIGN_STYLE = Automatic;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 18;
+				CURRENT_PROJECT_VERSION = 19;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
@@ -1026,7 +1038,7 @@
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = 0.2.4;
+				MARKETING_VERSION = 0.2.5;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;

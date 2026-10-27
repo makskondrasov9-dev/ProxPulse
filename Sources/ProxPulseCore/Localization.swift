@@ -94,6 +94,7 @@ public enum L10n {
         "Исх:": "TX:",
         "Работает": "Running",
         "Выключена": "Stopped",
+        "Остановлен": "Stopped",
         "В центр": "Recenter",
         "Скорость на линиях": "Link speeds",
         "Мосты: живые счётчики SSH или сумма машин. Трафик машины суммарный по NIC. RTT — от ноды до VPN endpoint.": "Bridges: live SSH counters or guest totals. Guest traffic is aggregated across NICs. RTT is measured from the node to the VPN endpoint.",

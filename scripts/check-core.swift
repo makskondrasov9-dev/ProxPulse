@@ -27,6 +27,7 @@ import ProxPulseCore
         try verifySprint5()
         verifySprint51()
         try verifySprint6()
+        try verifySprint9()
         try await verifySprint7()
         try await verifySprint8()
         try await verifyProgressiveTelemetry()

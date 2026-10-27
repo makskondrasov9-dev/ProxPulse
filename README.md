@@ -4,8 +4,8 @@
 <h1 align="center">ProxPulse</h1>
 <p align="center">Your Proxmox cluster. One calm glance.<br/>Ваш кластер Proxmox. Один спокойный взгляд.</p>
 <p align="center">
-  <a href="https://github.com/makskondrasov9-dev/ProxPulse/releases/tag/v0.2.4">Release v0.2.4</a> ·
-  <a href="https://github.com/makskondrasov9-dev/ProxPulse/releases/download/v0.2.4/ProxPulse-v0.2.4.dmg">Download DMG</a> ·
+  <a href="https://github.com/makskondrasov9-dev/ProxPulse/releases/tag/v0.2.5">Release v0.2.5</a> ·
+  <a href="https://github.com/makskondrasov9-dev/ProxPulse/releases/download/v0.2.5/ProxPulse-v0.2.5.dmg">Download DMG</a> ·
   macOS 14+ · Apple Silicon & Intel · Swift 6
 </p>
 
@@ -40,6 +40,13 @@ Retina screenshots of the actual app with **DEMO data**. Network addresses and w
 ## Русский
 
 **ProxPulse** — нативный клиент Proxmox VE для macOS на SwiftUI и WidgetKit. Мониторинг кластера, управление VM/LXC, телеметрия и диагностика собраны в одном интерфейсе. Секреты подключения хранятся в Apple Keychain.
+
+### Новое в v0.2.5 · build 19
+
+- **Виджеты машин на разных кластерах.** Универсальное сопоставление VMID, `node/vmid`, `node/type/vmid` и архивных ID AppIntent. Явный профиль проверяется отдельно; неоднозначный VMID не подменяется другой машиной.
+- **Устойчивое чтение JSON.** Отсутствующие или `null` IP, SWAP, vCPU, диск и данные портов получают безопасные значения. Выбор восстанавливается из актуального кэша, список сущностей обновляется при смене профиля.
+- **Выключенные машины.** Серый индикатор и статус «Остановлен» вместо пустой заглушки; блок портов скрыт.
+- **Меньше дисковых записей.** Сравнение SHA-256 содержимого исключает повторную запись неизменившегося `live_snapshot.json`. Свежесть поддерживается маленькой записью временных меток не чаще раза в 30 секунд. Timeline и фоновые обновления виджетов используют интервал 30 секунд; ручная смена сервера обновляет их сразу.
 
 ### Новое в v0.2.4 · build 18
 
@@ -111,7 +118,7 @@ open /Applications/ProxPulse.app
 
 Для ручной установки:
 
-1. Скачайте **[ProxPulse-v0.2.4.dmg](https://github.com/makskondrasov9-dev/ProxPulse/releases/download/v0.2.4/ProxPulse-v0.2.4.dmg)**. Рядом опубликована **[контрольная сумма SHA-256](https://github.com/makskondrasov9-dev/ProxPulse/releases/download/v0.2.4/ProxPulse-v0.2.4.dmg.sha256)**.
+1. Скачайте **[ProxPulse-v0.2.5.dmg](https://github.com/makskondrasov9-dev/ProxPulse/releases/download/v0.2.5/ProxPulse-v0.2.5.dmg)**. Рядом опубликована **[контрольная сумма SHA-256](https://github.com/makskondrasov9-dev/ProxPulse/releases/download/v0.2.5/ProxPulse-v0.2.5.dmg.sha256)**.
 2. Закройте старую версию. Откройте DMG и перетащите **ProxPulse.app → Applications**, подтвердив замену при обновлении.
 3. Запустите `/Applications/ProxPulse.app`. Выберите DEMO или добавьте сервер в WORKSPACE / Настройках. Поддерживаются API Token и логин/пароль; самоподписанный SSL настраивается для каждого профиля.
 4. Для виджетов: правый клик на рабочем столе → **Изменить виджеты** → **ProxPulse**. Сначала запустите приложение из Applications; держите его запущенным для свежих метрик.
@@ -138,6 +145,13 @@ xattr -cr /Applications/ProxPulse.app
 ## English
 
 **ProxPulse** is a native Proxmox VE client for macOS, built with SwiftUI and WidgetKit. Monitor your cluster, manage VM/LXC workloads and inspect telemetry in one interface. Connection secrets stay in Apple Keychain.
+
+### New in v0.2.5 · build 19
+
+- **Machine widgets across clusters.** Normalize VMID, `node/vmid`, `node/type/vmid` and archived AppIntent IDs. Explicit profile identity remains isolated, and ambiguous VMIDs never select an unrelated guest.
+- **Robust JSON fallbacks.** Missing or null IP, SWAP, vCPU, disk and port fields have safe defaults. Selections resolve against the current cache, and entity queries reflect the active profile.
+- **Stopped states.** Stopped guests retain their metrics layout with a gray indicator and “Stopped” status instead of an empty placeholder. Port badges stay hidden.
+- **Less disk I/O.** Content SHA-256 comparison skips unchanged `live_snapshot.json` writes. A small timestamp receipt preserves freshness at most once every 30 seconds. Widget timelines and background reloads use a 30-second interval, while manual server changes refresh immediately.
 
 ### New in v0.2.4 · build 18
 
@@ -207,7 +221,7 @@ open /Applications/ProxPulse.app
 
 Manual DMG installation:
 
-1. Download **[ProxPulse-v0.2.4.dmg](https://github.com/makskondrasov9-dev/ProxPulse/releases/download/v0.2.4/ProxPulse-v0.2.4.dmg)** and its **[SHA-256 checksum](https://github.com/makskondrasov9-dev/ProxPulse/releases/download/v0.2.4/ProxPulse-v0.2.4.dmg.sha256)**.
+1. Download **[ProxPulse-v0.2.5.dmg](https://github.com/makskondrasov9-dev/ProxPulse/releases/download/v0.2.5/ProxPulse-v0.2.5.dmg)** and its **[SHA-256 checksum](https://github.com/makskondrasov9-dev/ProxPulse/releases/download/v0.2.5/ProxPulse-v0.2.5.dmg.sha256)**.
 2. Quit the previous version. Open the DMG and drag **ProxPulse.app → Applications**, replacing the app when upgrading.
 3. Launch `/Applications/ProxPulse.app`. Try DEMO or add a server in WORKSPACE / Settings. API tokens and password authentication are supported; self-signed TLS can be enabled per profile.
 4. Right-click the desktop → **Edit Widgets** → **ProxPulse**. Launch the app from Applications first and keep it running for fresh metrics.
@@ -241,7 +255,7 @@ cd ProxPulse
 ./scripts/verify-local.sh       # Build, API/core/UI checks, WidgetKit executable
 ./scripts/verify-profile-form.sh # Native token-form regression (test-only Python 3 + OpenSSL)
 ./scripts/build-release.sh      # Optimized universal app + WidgetKit extension
-./scripts/create-dmg.sh         # dist/ProxPulse-v0.2.4.dmg + SHA-256
+./scripts/create-dmg.sh         # dist/ProxPulse-v0.2.5.dmg + SHA-256
 ```
 
 The compatibility helper confines any SDK compatibility adjustments to `.build`; it does not modify the SDK. On restricted development hosts, `PROXPULSE_LOCAL_CACHE=1` keeps SwiftPM caches inside the workspace. `PROXPULSE_REUSE_ICON=1` reuses the checked-in icon during release builds.

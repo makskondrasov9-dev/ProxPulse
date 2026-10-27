@@ -64,14 +64,15 @@ func verifySprint3() throws {
     mode.state = .live
     precondition(policy.shouldReload(mode, now: now.addingTimeInterval(6)), "First LIVE response must invalidate the connecting/DEMO timeline")
     precondition(!policy.shouldReload(mode, now: now.addingTimeInterval(25)))
-    precondition(policy.shouldReload(mode, now: now.addingTimeInterval(26)))
+    precondition(!policy.shouldReload(mode, now: now.addingTimeInterval(26)))
+    precondition(policy.shouldReload(mode, now: now.addingTimeInterval(36)))
     mode.profileID = UUID()
-    precondition(policy.shouldReload(mode, now: now.addingTimeInterval(27)), "Servers with identical node names must still reload")
-    precondition(policy.shouldReload(mode, force: true, now: now.addingTimeInterval(28)))
+    precondition(policy.shouldReload(mode, now: now.addingTimeInterval(37)), "Servers with identical node names must still reload")
+    precondition(policy.shouldReload(mode, force: true, now: now.addingTimeInterval(38)))
     mode.state = .error
-    precondition(policy.shouldReload(mode, now: now.addingTimeInterval(29)))
+    precondition(policy.shouldReload(mode, now: now.addingTimeInterval(39)))
     mode.state = .live
-    precondition(policy.shouldReload(mode, now: now.addingTimeInterval(30)))
-    print("PASS: immediate DEMO/LIVE/profile/error transitions and 20-second background widget refresh")
+    precondition(policy.shouldReload(mode, now: now.addingTimeInterval(40)))
+    print("PASS: immediate DEMO/LIVE/profile/error transitions and 30-second background widget refresh")
     print("PASS: notification transitions/deduplication/hysteresis/offline threshold/recovery/intentional stop; SSH quoting; RU/EN interpolation; widget migration and full payload")
 }

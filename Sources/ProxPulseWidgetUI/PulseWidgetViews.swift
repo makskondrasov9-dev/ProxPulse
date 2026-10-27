@@ -161,14 +161,14 @@ public struct MachineWidgetView: View {
     public var body: some View {
         VStack(alignment: .leading, spacing: small ? 5 : 7) {
             if let snapshot = entry.snapshot, let key = machineKey,
-               let machine = snapshot.guests?.first(where: { MonitoringRules.guestKey($0) == key }) {
+               let machine = MachineIdentity(key)?.resolve(in: snapshot) {
                 HStack(spacing: 5) {
                     Circle().fill(machine.running ? .green : .gray).frame(width: 6, height: 6)
                     Text(machine.name).font(small ? .system(size: 12, weight: .semibold) : .headline).lineLimit(1)
                     Spacer(minLength: 0)
                     if snapshot.isDemo { Text("DEMO").font(.system(size: 7, weight: .bold)) }
                 }
-                HStack { Text((machine.kind == .lxc ? "CT " : "VM ") + String(machine.id)); Spacer(); Text(text(machine.running ? "Работает" : "Выключена")) }.font(.system(size: small ? 9 : 10)).foregroundStyle(.secondary)
+                HStack { Text((machine.kind == .lxc ? "CT " : "VM ") + String(machine.id)); Spacer(); Text(text(machine.running ? "Работает" : "Остановлен")) }.font(.system(size: small ? 9 : 10)).foregroundStyle(.secondary)
                 Text("CPU \(Int(machine.cpu*100))% · \(machine.cpuCount.map(String.init) ?? "—") vCPU").font(.system(size: small ? 10 : 11, weight: .medium))
                 Text("RAM \(TelemetryFormat.number(machine.memoryGB, language: language)) / \(TelemetryFormat.number(machine.maxMemoryGB, language: language)) GB").font(.system(size: small ? 10 : 11))
                 if !small { ProgressView(value: min(1, machine.memoryGB / max(0.001, machine.maxMemoryGB))).tint(.purple) }

@@ -9,6 +9,13 @@ import WidgetKit
     @State private var model = DashboardModel()
     init() {
         #if DEBUG
+        if CommandLine.arguments.contains("--verify-sprint9") || CommandLine.arguments.contains("--verify-widgets-live") {
+            Task { @MainActor in
+                do { try await Sprint9Verification.run(live: CommandLine.arguments.contains("--verify-widgets-live")); exit(0) }
+                catch { print("SPRINT 9: \(error.localizedDescription)"); exit(1) }
+            }
+            RunLoop.main.run()
+        }
         if CommandLine.arguments.contains("--render-sprint8-inspector") {
             Task { @MainActor in
                 do { try Sprint8Verification.renderSavedInspector(); exit(0) }

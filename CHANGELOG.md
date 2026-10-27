@@ -1,5 +1,23 @@
 # Changelog
 
+## v0.2.5 — 2026-10-27
+
+Universal macOS 14+, build 19 (arm64 + x86_64).
+
+### Новое в v0.2.5 · build 19
+
+- **Виджеты машин на разных кластерах.** Универсальное сопоставление VMID, `node/vmid`, `node/type/vmid` и архивных ID AppIntent. Явный профиль проверяется отдельно; неоднозначный VMID не подменяется другой машиной.
+- **Устойчивое чтение JSON.** Отсутствующие или `null` IP, SWAP, vCPU, диск и данные портов получают безопасные значения. Выбор восстанавливается из актуального кэша, список сущностей обновляется при смене профиля.
+- **Выключенные машины.** Серый индикатор и статус «Остановлен» вместо пустой заглушки; блок портов скрыт.
+- **Меньше дисковых записей.** Сравнение SHA-256 содержимого исключает повторную запись неизменившегося `live_snapshot.json`. Свежесть поддерживается маленькой записью временных меток не чаще раза в 30 секунд. Timeline и фоновые обновления виджетов используют интервал 30 секунд; ручная смена сервера обновляет их сразу.
+
+### New in v0.2.5 · build 19
+
+- **Machine widgets across clusters.** Normalize VMID, `node/vmid`, `node/type/vmid` and archived AppIntent IDs. Explicit profile identity remains isolated, and ambiguous VMIDs never select an unrelated guest.
+- **Robust JSON fallbacks.** Missing or null IP, SWAP, vCPU, disk and port fields have safe defaults. Selections resolve against the current cache, and entity queries reflect the active profile.
+- **Stopped states.** Stopped guests retain their metrics layout with a gray indicator and “Stopped” status instead of an empty placeholder. Port badges stay hidden.
+- **Less disk I/O.** Content SHA-256 comparison skips unchanged `live_snapshot.json` writes. A small timestamp receipt preserves freshness at most once every 30 seconds. Widget timelines and background reloads use a 30-second interval, while manual server changes refresh immediately.
+
 ## v0.2.4 — 2026-10-26
 
 Universal macOS 14+, build 18.
